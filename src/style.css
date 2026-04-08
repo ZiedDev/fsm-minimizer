@@ -28,9 +28,15 @@ input {
     box-sizing: border-box;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    border-radius: 1rem;
+    border: none;
 }
 
-button, input[type="checkbox"] {
+button,
+input[type="checkbox"] {
     cursor: pointer;
 }
 
@@ -57,7 +63,7 @@ input[type="checkbox"]::after {
     position: absolute;
     top: -0.125rem;
     left: 0;
-    
+
     width: 1.25rem;
     height: 1.25rem;
     border-radius: 50%;
@@ -78,8 +84,9 @@ input[type="checkbox"]:checked::after {
     display: flex;
     flex-direction: column;
 
-    width: 30rem;
-    padding: 1rem;
+    max-width: 30rem;
+    width: fit-content;
+    padding: 1rem 1rem 1rem 3rem ;
     border-radius: 1rem;
     gap: 1rem;
     background-color: #020408;
@@ -87,41 +94,130 @@ input[type="checkbox"]:checked::after {
 
 .transition-table>.header {
     display: grid;
+    grid-template-columns: 1fr;
+    align-items: baseline;
+    position: relative;
+}
+
+.transition-table>.header>.title {
+    text-align: center;
+    margin: 0;
+}
+
+.transition-table>.header>.mode {
+    padding: 0 1rem;
+    border-radius: 1rem;
+    background-color: #5ba673;
+    position: absolute;
+    left: 100%;
+    transform: rotate(11deg) translate(-6rem);
+    display: flex;
+    align-items: center;
+}
+
+.transition-table>.subheader {
+    display: grid;
     grid-template-columns: repeat(3, 1fr);
     justify-items: center;
 }
 
-.transition-table>.header p {
+
+.transition-table>.subheader>.present-state,
+.transition-table>.subheader>.next-state,
+.transition-table>.subheader>.output {
+    text-align: center;
+    width: 100%;
+}
+
+.transition-table>.subheader>.next-state,
+.transition-table>.subheader>.output-mealy {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.25rem;
+    justify-items: center;
+    margin: 0 0.25rem;
+}
+
+.transition-table>.subheader p {
+    padding: 0;
+    margin: 0;
+}
+
+
+.transition-table>.table-header {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    justify-items: center;
+}
+
+.transition-table>.table-header h3 {
     padding: 0;
     margin: 0;
     text-align: center;
 }
 
-.transition-table>.header>.output>div {
-    display: flex;
-
+.transition-table>.content {
+    display: grid;
+    gap: 0.5rem;
 }
-
-.transition-table>.content {}
 
 .transition-table>.content>.row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     justify-items: center;
+    height: 2rem;
+}
+
+.transition-table>.content>.row {
+    animation: new-row 250ms ease forwards;
+}
+
+.transition-table>.content>.row>.present-state {
+    display: grid;
 }
 
 .transition-table>.content>.row>.next-state {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 2px;
+    gap: 0.25rem;
     justify-items: center;
+}
+
+.transition-table>.content>.row>.output-moore {
+    display: grid;
 }
 
 .transition-table>.content>.row>.output-mealy {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 2px;
+    gap: 0.25rem;
     justify-items: center;
+    margin: 0 0.25rem;
+}
+
+.transition-table>.content>.row>.trash-icon {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    right: 100%;
+    position: absolute;
+    background-color: #c14740;
+    border-radius: 100rem;
+    transition: scale 150ms ease;
+}
+
+.transition-table>.content>.row>.trash-icon:hover {
+    scale: 1.05;
+}
+
+.transition-table>.content>.row>.trash-icon:active {
+    scale: 0.95;
+}
+
+.transition-table>.content>.row>.trash-icon img {
+    scale: 0.9;
 }
 
 .transition-table>.add-button {
@@ -145,6 +241,18 @@ input[type="checkbox"]:checked::after {
 
 .transition-table>.add-button>button:active {
     transform: scale(0.95);
+}
+
+@keyframes new-row {
+    0% {
+        opacity: 0;
+        transform: translateY(-50%);
+    }
+    
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .hide {

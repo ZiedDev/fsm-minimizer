@@ -1,15 +1,17 @@
 import './style.css';
+import trashIcon from './assets/trashIcon.svg'
 
 const transitionTable = document.querySelector("#transition-table-content");
 const isMooreCheck = document.querySelector<HTMLInputElement>("#is-moore-check");
 const addRowButton = document.querySelector<HTMLInputElement>("#add-row-button");
+const subheaderOutput = document.querySelector<HTMLInputElement>("#subheader-output");
 
-isMooreCheck?.addEventListener("click",e => {
+isMooreCheck?.addEventListener("click", e => {
     transitionTable!.innerHTML = "";
     transitionTable?.appendChild(addARow());
 });
 
-addRowButton?.addEventListener("click",e => {
+addRowButton?.addEventListener("click", e => {
     transitionTable?.appendChild(addARow());
 });
 
@@ -17,7 +19,7 @@ function addARow(
     { presentStateVal, nextStateVal, outputVal }: {
         presentStateVal?: string,
         nextStateVal?: string[],
-        outputVal?: number[]
+        outputVal?: string[]
     } = {}
 ): HTMLElement {
     const row = document.createElement("div");
@@ -40,12 +42,21 @@ function addARow(
 
     const output = document.createElement("div");
     output.classList.add("output");
+
     if (isMooreCheck?.checked) {
+        subheaderOutput!.innerHTML = '';
+        subheaderOutput?.classList.remove("output-mealy");
+        subheaderOutput?.classList.add("output-moore");
+
         const outputInput = document.createElement("input");
         output.classList.add("output-moore");
         outputInput.value = ([] as any[]).concat(outputVal ?? [])[0] ?? "";
         output.append(outputInput);
     } else {
+        subheaderOutput!.innerHTML = '<p>X = 0</p><p>X = 1</p>';
+        subheaderOutput?.classList.remove("output-moore");
+        subheaderOutput?.classList.add("output-mealy");
+
         output.classList.add("output-mealy");
         const outputZeroInput = document.createElement("input");
         const outputOneInput = document.createElement("input");
@@ -55,10 +66,17 @@ function addARow(
         output.append(outputZeroInput, outputOneInput);
     }
 
+    const deleteButton = document.createElement("button");
+    deleteButton.classList.add("trash-icon");
+    const trashIconImg = document.createElement('img')
+    trashIconImg.src = trashIcon;
+    deleteButton.tabIndex = -1;
+    deleteButton?.append(trashIconImg);
+    deleteButton.addEventListener('click', e=> {
+        row.parentElement!.removeChild(row);
+    });
 
-    row.append(presentState, nextState, output);
-
-    console.log(outputVal);
+    row.append(presentState, nextState, output, deleteButton);
 
     return row;
 }
