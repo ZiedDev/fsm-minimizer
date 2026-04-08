@@ -1,13 +1,39 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>digital-logic-2</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>digital-logic-2</title>
+</head>
+
+<body>
+  <div id="app">
+    <div class="transition-table">
+      <div class="title">Transition Table</div>
+      <div class="header">
+        <p>Present State</p>
+        <p>Next State</p>
+        <div class="output">
+          <p>Output</p>
+          <div>
+            <p>Mealy</p>
+            <input type="checkbox" name="" id="is-moore-check" checked>
+            <p>Moore</p>
+          </div>
+        </div>
+      </div>
+      <div class="content" id="transition-table-content"></div>
+      <div class="add-button">
+        <button id="add-row-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M15 12h-3m0 0H9m3 0V9m0 3v3"/></g></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>

@@ -1,60 +1,66 @@
-import './style.css'
-import typescriptLogo from './assets/typescript.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import { setupCounter } from './counter.ts'
+import './style.css';
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-<section id="center">
-  <div class="hero">
-    <img src="${heroImg}" class="base" width="170" height="179">
-    <img src="${typescriptLogo}" class="framework" alt="TypeScript logo"/>
-    <img src=${viteLogo} class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/main.ts</code> and save to test <code>HMR</code></p>
-  </div>
-  <button id="counter" type="button" class="counter"></button>
-</section>
+const transitionTable = document.querySelector("#transition-table-content");
+const isMooreCheck = document.querySelector<HTMLInputElement>("#is-moore-check");
+const addRowButton = document.querySelector<HTMLInputElement>("#add-row-button");
 
-<div class="ticks"></div>
+isMooreCheck?.addEventListener("click",e => {
+    transitionTable!.innerHTML = "";
+    transitionTable?.appendChild(addARow());
+});
 
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#documentation-icon"></use></svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank">
-          <img class="logo" src=${viteLogo} alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://www.typescriptlang.org" target="_blank">
-          <img class="button-icon" src="${typescriptLogo}" alt="">
-          Learn more
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#social-icon"></use></svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li><a href="https://github.com/vitejs/vite" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>GitHub</a></li>
-      <li><a href="https://chat.vite.dev/" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#discord-icon"></use></svg>Discord</a></li>
-      <li><a href="https://x.com/vite_js" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#x-icon"></use></svg>X.com</a></li>
-      <li><a href="https://bsky.app/profile/vite.dev" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#bluesky-icon"></use></svg>Bluesky</a></li>
-    </ul>
-  </div>
-</section>
+addRowButton?.addEventListener("click",e => {
+    transitionTable?.appendChild(addARow());
+});
 
-<div class="ticks"></div>
-<section id="spacer"></section>
-`
+function addARow(
+    { presentStateVal, nextStateVal, outputVal }: {
+        presentStateVal?: string,
+        nextStateVal?: string[],
+        outputVal?: number[]
+    } = {}
+): HTMLElement {
+    const row = document.createElement("div");
+    row.classList.add("row");
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+    const presentState = document.createElement("div");
+    const presentStateInput = document.createElement("input");
+    presentState.classList.add("present-state");
+    presentStateInput.value = presentStateVal ?? "";
+    presentState.append(presentStateInput);
+
+    const nextState = document.createElement("div");
+    nextState.classList.add("next-state");
+    const nextStateZeroInput = document.createElement("input");
+    const nextStateOneInput = document.createElement("input");
+    const [nextStateZeroVal, nextStateOneVal] = ([] as any[]).concat(nextStateVal ?? []);
+    nextStateZeroInput.value = nextStateZeroVal ?? "";
+    nextStateOneInput.value = nextStateOneVal ?? "";
+    nextState.append(nextStateZeroInput, nextStateOneInput);
+
+    const output = document.createElement("div");
+    output.classList.add("output");
+    if (isMooreCheck?.checked) {
+        const outputInput = document.createElement("input");
+        output.classList.add("output-moore");
+        outputInput.value = ([] as any[]).concat(outputVal ?? [])[0] ?? "";
+        output.append(outputInput);
+    } else {
+        output.classList.add("output-mealy");
+        const outputZeroInput = document.createElement("input");
+        const outputOneInput = document.createElement("input");
+        const [outputZeroVal, outputOneVal] = ([] as any[]).concat(outputVal ?? []);
+        outputZeroInput.value = outputZeroVal ?? "";
+        outputOneInput.value = outputOneVal ?? "";
+        output.append(outputZeroInput, outputOneInput);
+    }
+
+
+    row.append(presentState, nextState, output);
+
+    console.log(outputVal);
+
+    return row;
+}
+
+transitionTable?.appendChild(addARow());
