@@ -10,38 +10,31 @@
 
 <body>
   <div id="app">
-    <div class="transition-table">
+    <div class="transition-table" id="transition-table">
       <div class="header">
         <h2 class="title">Transition Table</h2>
         <div class="mode">
           <p>Mealy</p>
-          <input type="checkbox" name="" id="is-moore-check" checked>
+          <input type="checkbox" name="" id="is-moore-check">
           <p>Moore</p>
         </div>
         <div class="number-of-inputs">
           <p>Number of Inputs</p>
-          <input type="number" id="number-of-inputs-input" oninput="this.value = [1,2,3].includes(+this.value) ? this.value : ''" min="1" max="3"  value="1" >
+          <input type="number" id="number-of-inputs-input" min="1" max="3" value="2">
         </div>
       </div>
 
-      <div class="table-header">
-        <h3>Present State</h3>
-        <h3>Next State</h3>
-        <h3>Output</h3>
-      </div>
+      <div class="table-content">
 
-      <div class="subheader">
-        <div class="present-state"></div>
-        <div class="next-state">
-          <p>X = 0</p>
-          <p>X = 1</p>
+        <div class="subheader">
+          <div class="present-state"><p></p></div>
+          <div class="next-state" id="subheader-next-state"></div>
+          <div class="output" id="subheader-output"><p></p></div>
         </div>
-        <div class="output" id="subheader-output">
-        </div>
+
+        <div class="content" id="transition-table-content"></div>
+
       </div>
-
-      <div class="content" id="transition-table-content"></div>
-
       <div class="add-button">
         <button id="add-row-button">
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
@@ -54,10 +47,12 @@
         </button>
       </div>
     </div>
-    
+
     <button class="generate-button" id="generate-button">
       <h3>Generate Implication Table</h3>
     </button>
+
+    <input type="file" name="" id="file">
   </div>
 
   <script type="module" src="/src/main.ts"></script>
