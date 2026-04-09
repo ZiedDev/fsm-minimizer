@@ -15,12 +15,12 @@
         <h2 class="title">Transition Table</h2>
         <div class="mode">
           <p>Mealy</p>
-          <input type="checkbox" name="" id="is-moore-check">
+          <input type="checkbox" name="" id="is-moore-check" checked>
           <p>Moore</p>
         </div>
         <div class="number-of-inputs">
           <p>Number of Inputs</p>
-          <input type="number" id="number-of-inputs-input" min="1" max="3" value="2">
+          <input type="number" id="number-of-inputs-input" min="1" max="3" value="1">
         </div>
       </div>
 
@@ -52,7 +52,10 @@
       <h3>Generate Implication Table</h3>
     </button>
 
-    <input type="file" name="" id="file">
+    <div class="import-export-container">
+          <button><h3 style="margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;">Download Table</h3></button>
+          <input type="file" name="" id="file" accept=".json">
+    </div>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

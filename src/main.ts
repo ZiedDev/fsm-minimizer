@@ -198,7 +198,7 @@ function readTable() {
         presentState: [],
         nextState: [],
         output: [],
-        mode: isMooreCheck?.value ? "moore" : "mealy",
+        mode: isMooreCheck?.checked ? "moore" : "mealy",
         inputNum: numInputs,
     };
 
@@ -245,7 +245,35 @@ function downloadJSON() {
     a.click(); // Trigger download
 }
 
+const fileElement = document.querySelector<HTMLInputElement>("#file");
+fileElement?.addEventListener("input", e => {
+    loadJSON(e);
+
+})
+
+async function loadJSON(event: any) {
+    const file = event.target.files.item(0);
+    const content = await file.text();
+
+    try {
+        const parsed = JSON.parse(content);
+
+        numberOfInputsInput!.value = parsed.inputNum;
+        numInputs = parsed.inputNum;
+        isMooreCheck!.checked = parsed.mode == "moore" ? true : false;
+
+        transitionTable!.innerHTML = "";
+        for (let i = 0; i < Math.max(parsed.presentState.length, parsed.nextState.length, parsed.output.length); i++) {
+            transitionTable?.appendChild(addARow({
+                presentStateVal: parsed.presentState[i], nextStateVal: parsed.nextState[i], outputVal: parsed.output[i]
+            }));
+        }
+    } catch {
+        throw new Error("broken file 😔");
+    }
+}
+
 // transitionTable?.appendChild(addARow());
 transitionTable?.appendChild(addARow({
-    presentStateVal: "a", nextStateVal: ["b", "c", 'd', 'e'], outputVal: ["1", "0", "0", "1"]
+    // presentStateVal: "a", nextStateVal: ["b", "c", 'd', 'e'], outputVal: ["1", "0", "0", "1"]
 }));
