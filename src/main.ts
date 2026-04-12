@@ -4,40 +4,54 @@ import { gsap } from "gsap";
 gsap.config({ nullTargetWarn: false });
 
 // HTML Elements
-const transitionTableBody = document.querySelector<HTMLDivElement>("#transition-table");
-const transitionTable = document.querySelector<HTMLDivElement>("#transition-table-content");
+const transitionTableBody = document.querySelector<HTMLDivElement>("#transition-table")!;
+const transitionTable = document.querySelector<HTMLDivElement>("#transition-table-content")!;
+const isMooreCheck = document.querySelector<HTMLInputElement>("#is-moore-check")!;
+const subheaderNextState = document.querySelector<HTMLDivElement>("#subheader-next-state")!;
+const subheaderOutput = document.querySelector<HTMLDivElement>("#subheader-output")!;
+const addRowButton = document.querySelector<HTMLButtonElement>("#add-row-button")!;
+const generateButton = document.querySelector<HTMLButtonElement>("#generate-button")!;
+const numberOfInputsInput = document.querySelector<HTMLInputElement>('#number-of-inputs-input')!;
+const downloadButton = document.querySelector<HTMLInputElement>('#download-button')!;
+const fileElement = document.querySelector<HTMLInputElement>("#file")!;
+const implicationTable = document.querySelector<HTMLDivElement>("#implication-table");
 
-const isMooreCheck = document.querySelector<HTMLInputElement>("#is-moore-check");
+// Types
+type TableData = {
+    presentState: string[];
+    nextState: string[][];
+    output: string[][];
+    mode: "mealy" | "moore";
+    inputNum: number;
+}
 
-const subheaderNextState = document.querySelector<HTMLDivElement>("#subheader-next-state");
-const subheaderOutput = document.querySelector<HTMLDivElement>("#subheader-output");
-
-const addRowButton = document.querySelector<HTMLButtonElement>("#add-row-button");
-const generateButton = document.querySelector<HTMLButtonElement>("#generate-button");
-
-const numberOfInputsInput = document.querySelector<HTMLInputElement>('#number-of-inputs-input');
-let numInputs = Number(numberOfInputsInput?.value);
+// Variables
+let numInputs = Number(numberOfInputsInput.value);
+let transitionTableData: TableData = {
+    presentState: [],
+    nextState: [],
+    output: [],
+    mode: isMooreCheck.checked ? "moore" : "mealy",
+    inputNum: numInputs,
+};
 
 // Events
-isMooreCheck?.addEventListener("click", e => {
-    transitionTable!.innerHTML = "";
-    transitionTable?.appendChild(addARow());
+isMooreCheck.addEventListener("click", e => {
+    transitionTable.innerHTML = "";
+    transitionTable.appendChild(addARow());
 });
+numberOfInputsInput.addEventListener("change", e => {
+    if (numberOfInputsInput.value == "") return;
+    if (numInputs == Number(numberOfInputsInput.value)) return;
 
-numberOfInputsInput?.addEventListener("change", e => {
-    if (numberOfInputsInput?.value == "") return;
-    if (numInputs == Number(numberOfInputsInput?.value)) return;
-
-    numInputs = Number(numberOfInputsInput?.value);
-    transitionTable!.innerHTML = "";
-    transitionTable?.appendChild(addARow());
+    numInputs = Number(numberOfInputsInput.value);
+    transitionTable.innerHTML = "";
+    transitionTable.appendChild(addARow());
 
     // update css variables
-    transitionTableBody?.style.setProperty("--number-of-inputs", String(numInputs));
-
+    transitionTableBody.style.setProperty("--number-of-inputs", String(numInputs));
 });
-
-addRowButton?.addEventListener("click", e => {
+addRowButton.addEventListener("click", e => {
     gsap.fromTo(addRowButton, {
         rotation: "0deg",
     }, {
@@ -46,28 +60,33 @@ addRowButton?.addEventListener("click", e => {
         ease: "expo.out",
         clearProps: "all",
     });
-    transitionTable?.appendChild(addARow());
+    transitionTable.appendChild(addARow());
 });
-
-generateButton?.addEventListener("click", e => {
-    readTable();
+generateButton.addEventListener("click", e => {
+    generateImplicationTable(transitionTableData);
+});
+downloadButton.addEventListener("click", e => {
+    downloadJSON(transitionTableData);
+});
+fileElement.addEventListener("input", e => {
+    loadJSON(e);
 });
 
 // Functions
 function updateHeader() {
-    if (isMooreCheck?.checked) {
+    if (isMooreCheck.checked) {
         // Moore
         subheaderOutput!.innerHTML = "";
-        subheaderOutput?.classList.remove("output-mealy");
-        subheaderOutput?.classList.add("output-moore");
+        subheaderOutput.classList.remove("output-mealy");
+        subheaderOutput.classList.add("output-moore");
     } else {
         // Mealy
         subheaderOutput!.innerHTML = "";
         for (let i = 0; i < numInputs; i++) {
             subheaderOutput!.innerHTML += `<p>X<sub>${i}</sub>=0</p><p>X<sub>${i}</sub>=1</p>`;
         }
-        subheaderOutput?.classList.remove("output-moore");
-        subheaderOutput?.classList.add("output-mealy")
+        subheaderOutput.classList.remove("output-moore");
+        subheaderOutput.classList.add("output-mealy")
     };
 
     subheaderNextState!.innerHTML = ""
@@ -75,7 +94,6 @@ function updateHeader() {
         subheaderNextState!.innerHTML += `<p>X<sub>${i}</sub>=0</p><p>X<sub>${i}</sub>=1</p>`;
     }
 }
-
 function addARow(
     { presentStateVal, nextStateVal, outputVal }: {
         presentStateVal?: string,
@@ -112,7 +130,7 @@ function addARow(
     const output = document.createElement("div");
     output.classList.add("output");
 
-    if (isMooreCheck?.checked) {
+    if (isMooreCheck.checked) {
         // Moore
         updateHeader();
         output.classList.add("output-moore");
@@ -146,7 +164,7 @@ function addARow(
     const trashIconImg = document.createElement('img')
     trashIconImg.src = trashIcon;
     deleteButton.tabIndex = -1;
-    deleteButton?.append(trashIconImg);
+    deleteButton.append(trashIconImg);
     deleteButton.addEventListener('click', e => {
         gsap.to(row, {
             "--scale": 0,
@@ -156,10 +174,11 @@ function addARow(
             ease: "expo.out",
             onComplete: () => {
                 row.remove();
+                transitionTableData = readTable();
+                enableDisableGenerateButton(transitionTableData);
             }
         });
     });
-
     gsap.fromTo(row, {
         "--scale": 0,
         height: 0,
@@ -171,7 +190,6 @@ function addARow(
         duration: .5,
         ease: "expo.out",
     });
-
     gsap.fromTo(row.children, {
         "--scale": 0,
         height: 0,
@@ -183,28 +201,29 @@ function addARow(
     });
 
     row.append(deleteButton, presentState, nextState, output);
+    row.querySelectorAll<HTMLInputElement>("input").forEach(input => {
+        input.addEventListener("input", e => {
+            transitionTableData = readTable();
+            enableDisableGenerateButton(transitionTableData);
+        });
+    });
 
+    transitionTableData = readTable();
+    enableDisableGenerateButton(transitionTableData, { forceDisable: true });
     return row;
 }
-
-function readTable() {
-    const transitionTableData: {
-        presentState: string[],
-        nextState: string[][],
-        output: string[][],
-        mode: "mealy" | "moore",
-        inputNum: number,
-    } = {
+function readTable(): TableData {
+    const transitionTableData: TableData = {
         presentState: [],
         nextState: [],
         output: [],
-        mode: isMooreCheck?.checked ? "moore" : "mealy",
+        mode: isMooreCheck.checked ? "moore" : "mealy",
         inputNum: numInputs,
     };
 
     const rows = document.querySelectorAll(".row");
 
-    if (isMooreCheck?.checked) {
+    if (isMooreCheck.checked) {
         // Moore
         rows.forEach(row => {
             transitionTableData.presentState.push(row.querySelector<HTMLInputElement>(".present-state-input")!.value)
@@ -232,25 +251,16 @@ function readTable() {
         });
     }
 
-    console.log(transitionTableData);
     return transitionTableData;
 }
-
-function downloadJSON() {
-    let blob = new Blob([JSON.stringify(readTable())], { type: "application/json" });
+function downloadJSON(tableData: TableData) {
+    let blob = new Blob([JSON.stringify(tableData)], { type: "application/json" });
     const a = document.createElement("a");
     const todayDate = new Date().toISOString().slice(0, 10);
     a.download = `My Implication Table ${todayDate}.json`;
     a.href = window.URL.createObjectURL(blob);
     a.click(); // Trigger download
 }
-
-const fileElement = document.querySelector<HTMLInputElement>("#file");
-fileElement?.addEventListener("input", e => {
-    loadJSON(e);
-
-})
-
 async function loadJSON(event: any) {
     const file = event.target.files.item(0);
     const content = await file.text();
@@ -264,16 +274,74 @@ async function loadJSON(event: any) {
 
         transitionTable!.innerHTML = "";
         for (let i = 0; i < Math.max(parsed.presentState.length, parsed.nextState.length, parsed.output.length); i++) {
-            transitionTable?.appendChild(addARow({
+            transitionTable.appendChild(addARow({
                 presentStateVal: parsed.presentState[i], nextStateVal: parsed.nextState[i], outputVal: parsed.output[i]
             }));
         }
+        transitionTableData = readTable();
+        enableDisableGenerateButton(transitionTableData);
     } catch {
         throw new Error("broken file 😔");
     }
 }
+function hasEmptyString(obj: object): boolean {
+    for (const value of Object.values(obj)) {
+        if (typeof value === "string" && value === "") {
+            return true;
+        }
 
-// transitionTable?.appendChild(addARow());
-transitionTable?.appendChild(addARow({
-    // presentStateVal: "a", nextStateVal: ["b", "c", 'd', 'e'], outputVal: ["1", "0", "0", "1"]
+        if (value !== null && typeof value === "object") {
+            if (hasEmptyString(value)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+function hasDuplicateStringsInArray<T>(arr: T[], seen = new Set<string>()): boolean {
+    for (const item of arr) {
+        if (typeof item === 'string') {
+            if (seen.has(item)) return true;
+            seen.add(item);
+        }
+        else if (Array.isArray(item)) {
+            if (hasDuplicateStringsInArray(item, seen)) return true;
+        }
+        else if (item !== null && typeof item === 'object') {
+            const values = Object.values(item as Record<string, unknown>);
+            if (hasDuplicateStringsInArray(values, seen)) return true;
+        }
+    }
+
+    return false;
+}
+function enableDisableGenerateButton(tableData: TableData, { forceDisable }: { forceDisable?: boolean } = {}) {
+    if (forceDisable === true) {
+        generateButton.disabled = true;
+        generateButton.style.setProperty("--tip-msg", "'You must fill all the inputs'");
+        return;
+    }
+
+    if (tableData.nextState.length == 0 || hasEmptyString(tableData)) {
+        generateButton.disabled = true;
+        generateButton.style.setProperty("--tip-msg", "'You must fill all the inputs'");
+    } else if (hasDuplicateStringsInArray(tableData.presentState)) {
+        generateButton.disabled = true;
+        generateButton.style.setProperty("--tip-msg", "'Present states variables can not be repeated'");
+    } else {
+
+        generateButton.disabled = false;
+        generateButton.style.setProperty("--tip-msg", "");
+    }
+}
+function generateImplicationTable(tableData: TableData) {
+}
+
+transitionTable.appendChild(addARow({
+    presentStateVal: "a", nextStateVal: ["b", "c", 'd', 'e'], outputVal: ["1", "0", "0", "1"]
 }));
+transitionTable.appendChild(addARow({
+    presentStateVal: "c", nextStateVal: ["b", "c", 'd', 'e'], outputVal: ["1", "0", "0", "1"]
+}));
+transitionTableData = readTable();
+enableDisableGenerateButton(transitionTableData);
