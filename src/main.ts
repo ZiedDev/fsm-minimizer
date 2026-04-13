@@ -1,7 +1,9 @@
 import './style.css';
 import trashIcon from './assets/trashIcon.svg'
 import { gsap } from "gsap";
+import { SplitText } from 'gsap/SplitText';
 gsap.config({ nullTargetWarn: false });
+gsap.registerPlugin(SplitText)
 
 // HTML Elements
 const transitionTableBody = document.querySelector<HTMLDivElement>("#transition-table")!;
@@ -18,7 +20,10 @@ const implicationTableBody = document.querySelector<HTMLDivElement>("#implicatio
 const implicationTable = document.querySelector<HTMLDivElement>("#implication-table .content")!;
 const nextButtonBody = document.querySelector<HTMLDivElement>(".implication-table-next-button")!;
 const nextButton = document.querySelector<HTMLButtonElement>(".implication-table-next-button button")!;
-const minimizedTable = document.querySelector<HTMLDivElement>("#minimized-table")!;
+const minimizedTableBody = document.querySelector<HTMLDivElement>("#minimized-table")!;
+const minimizedTable = document.querySelector<HTMLDivElement>("#minimized-table .content")!;
+const minimizedTableHeader = document.querySelector<HTMLDivElement>("#minimized-table .header")!;
+const minimizedTableComment = document.querySelector<HTMLDivElement>("#minimized-table .comment")!;
 
 // Types
 type TableData = {
@@ -85,7 +90,7 @@ generateButton.addEventListener("click", e => {
     }, 0);
     nextButton.disabled = false
     minimizedTable.innerHTML = "";
-    minimizedTable.classList.add("hide");
+    minimizedTableBody.classList.add("hide");
 });
 downloadButton.addEventListener("click", e => {
     downloadJSON(transitionTableData);
@@ -101,8 +106,10 @@ nextButton.addEventListener("click", e => {
         nextButton.disabled = true
         const reducedTable = reduceImplicationTable();
         minimizedTable.innerHTML = "";
+
         minimizedTable.append(minimizedTableGenerator(reducedTable, currentMode, currentInputNum));
-        minimizedTable.classList.remove("hide");
+        minimizedTableComment.classList.add("invisible");
+        minimizedTableBody.classList.remove("hide");
         document.body.scrollIntoView({
             behavior: "smooth",
             block: "end",
@@ -616,8 +623,6 @@ function minimizedTableGenerator(reducedImplicationTable: string[][], mode: "mea
         minimizedTableData.output.push(transitionTableData.output[originalStateIndex]);
     }
 
-    console.log(minimizedTableData);
-
     const presentStateColumn = document.createElement("div");
     presentStateColumn.classList.add("present-state-column");
     minimizedTableData.presentState.forEach(state => {
@@ -662,8 +667,14 @@ function minimizedTableGenerator(reducedImplicationTable: string[][], mode: "mea
     });
 
     table.append(presentStateColumn, nextStateColumn, outputColumn);
+    updateMinimizedHeader();
 
-    gsap.fromTo([table.querySelectorAll(".minimized-row div"), table.querySelectorAll(".minimized-row div p")], {
+    const comment = document.createElement("div");
+    comment.innerHTML = `Expression Reduced from <span class="from">${transitionTableData.presentState.length}</span> → <span class="to">${minimizedTableData.presentState.length}</span> states`;
+    minimizedTableComment.innerHTML = "";
+    minimizedTableComment.append(comment)
+
+    gsap.fromTo([table.querySelectorAll(".minimized-row div"), minimizedTableHeader.children, minimizedTableHeader.children[1].children, minimizedTableHeader.children[2].children, table.querySelectorAll(".minimized-row div p")], {
         opacity: 0,
         y: 15,
     }, {
@@ -675,11 +686,64 @@ function minimizedTableGenerator(reducedImplicationTable: string[][], mode: "mea
         y: 0,
         clearProps: "transform",
         onComplete: function () {
+            let split = SplitText.create(comment, {
+                type: "words, chars",
+                onSplit: (self) => {
+                    minimizedTableComment.classList.remove("invisible");
+                    gsap.fromTo(self.chars, {
+                        opacity: 0,
+                        y: 15,
+                    }, {
+                        delay: 0.25,
+                        stagger: 0.06,
+                        duration: 0.8,
+                        ease: "elastic.out",
+                        opacity: 1,
+                        y: 0,
+                        clearProps: "transform",
+                        onComplete: function () {
+                            this.kill();
+                        }
+                    });
+                }
+            });
             this.kill();
         }
     });
 
     return table;
+}
+function updateMinimizedHeader() {
+    minimizedTableHeader.innerHTML = "";
+
+    const presentState = document.createElement("div");
+    const nextState = document.createElement("div");
+    const output = document.createElement("div");
+    presentState.classList.add("present-state-column");
+    nextState.classList.add("next-state-column");
+    output.classList.add("output-column");
+
+    if (isMooreCheck.checked) {
+        // Moore
+        output!.innerHTML = "";
+        output.classList.remove("output-mealy");
+        output.classList.add("output-moore");
+    } else {
+        // Mealy
+        output!.innerHTML = "";
+        for (let i = 0; i < numInputs; i++) {
+            output!.innerHTML += `<p>X<sub>${i}</sub>=0</p><p>X<sub>${i}</sub>=1</p>`;
+        }
+        output.classList.remove("output-moore");
+        output.classList.add("output-mealy")
+    };
+
+    nextState!.innerHTML = ""
+    for (let i = 0; i < numInputs; i++) {
+        nextState!.innerHTML += `<p>X<sub>${i}</sub>=0</p><p>X<sub>${i}</sub>=1</p>`;
+    }
+
+    minimizedTableHeader.append(presentState, nextState, output)
 }
 
 // Sample 1

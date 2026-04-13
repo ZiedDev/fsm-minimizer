@@ -689,7 +689,7 @@ input[type="checkbox"] {
     width: 40rem;
     padding: 2rem 1rem;
     border-radius: 1rem;
-    gap: 2rem;
+    gap: 3rem;
     background-color: #020408;
     box-shadow: var(--shadow-elevation-medium);
 
@@ -765,12 +765,14 @@ input[type="checkbox"] {
             position: absolute;
             display: flex;
             flex-direction: column;
+            align-items: end;
             top: 0;
             bottom: 0;
-            right: 100%;
+            right: calc(100% - 1rem);
 
             p {
                 height: 3rem;
+                text-align: right;
             }
         }
 
@@ -778,12 +780,15 @@ input[type="checkbox"] {
             position: absolute;
             display: flex;
             top: 100%;
-            left: 0;
+            left: 1rem;
             right: 0;
+
+            p {
+                height: 3rem;
+            }
         }
 
         p {
-            /* height: 3rem; */
             min-width: 4.388rem;
             display: flex;
             justify-content: center;
@@ -824,57 +829,113 @@ input[type="checkbox"] {
         width: 90%;
     }
 
-    >div {
+    .content {
         width: 100%;
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
 
-        .present-state-column,
-        .next-state-column,
-        .output-column {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-
-            .minimized-row {
-                display: flex;
-                width: 100%;
-                height: 100%;
-                height: 3rem;
-            }
-
-            .minimized-row div {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 100%;
-                height: 100%;
-                box-shadow: inset 0 0 0 1pt #e6edf3;
-            }
+        div {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
 
             &::before {
                 font-size: large;
                 font-weight: bold;
                 margin-bottom: 0.5rem;
+                height: 2rem;
+                text-align: center;
+            }
+
+            .present-state-column,
+            .next-state-column,
+            .output-column {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+
+                .minimized-row {
+                    display: flex;
+                    width: 100%;
+                    height: 100%;
+                    height: 3rem;
+                }
+
+                .minimized-row div {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                    box-shadow: inset 0 0 0 1pt #e6edf3;
+                }
+            }
+        }
+    }
+
+    .header {
+        margin-top: 1rem;
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+
+        div {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            position: relative;
+
+            p {
+                width: 100%;
+                text-align: center;
+            }
+
+            &.present-state-column,
+            &.next-state-column,
+            &.output-column {
+                &::before {
+                    position: absolute;
+                    font-size: large;
+                    font-weight: bold;
+                    margin-bottom: 0.5rem;
+                    height: 2rem;
+                    text-align: center;
+                    bottom: 2.5rem;
+                }
+            }
+
+            &.present-state-column {
+                &::before {
+                    content: "Present State";
+                }
+            }
+
+            &.next-state-column {
+
+                &::before {
+                    content: "Next State";
+                }
+            }
+
+            &.output-column {
+                &::before {
+                    content: "Output";
+                }
+            }
+        }
+    }
+
+    .comment {
+        margin-top: 2rem;
+
+        .from {
+            div{ 
+                color: #c14740;
             }
         }
 
-        .present-state-column {
-            &::before {
-                content: "Present State";
-            }
-        }
-
-        .next-state-column {
-
-            &::before {
-                content: "Next State";
-            }
-        }
-
-        .output-column {
-            &::before {
-                content: "Output";
+        .to {
+            div {
+                color: #5ba673;
             }
         }
     }
@@ -882,6 +943,10 @@ input[type="checkbox"] {
 
 .hide {
     display: none !important;
+}
+
+.invisible {
+    visibility: hidden !important;
 }
 
 @keyframes new-row {
