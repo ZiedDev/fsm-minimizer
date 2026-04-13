@@ -16,7 +16,9 @@ const downloadButton = document.querySelector<HTMLInputElement>('#download-butto
 const fileElement = document.querySelector<HTMLInputElement>("#file")!;
 const implicationTableBody = document.querySelector<HTMLDivElement>("#implication-table")!;
 const implicationTable = document.querySelector<HTMLDivElement>("#implication-table .content")!;
-const nextButton = document.querySelector(".implication-table-next-button");
+const nextButtonBody = document.querySelector<HTMLDivElement>(".implication-table-next-button")!;
+const nextButton = document.querySelector<HTMLButtonElement>(".implication-table-next-button button")!;
+const minimizedTable = document.querySelector<HTMLDivElement>("#minimized-table")!;
 
 // Types
 type TableData = {
@@ -36,6 +38,10 @@ let transitionTableData: TableData = {
     mode: isMooreCheck.checked ? "moore" : "mealy",
     inputNum: numInputs,
 };
+
+// States
+let currentMode: "mealy" | "moore";
+let currentInputNum: number;
 
 // Events
 isMooreCheck.addEventListener("click", e => {
@@ -65,6 +71,8 @@ addRowButton.addEventListener("click", e => {
     transitionTable.appendChild(addARow());
 });
 generateButton.addEventListener("click", e => {
+    currentMode = transitionTableData.mode;
+    currentInputNum = transitionTableData.inputNum;
     implicationTable.append(generateImplicationTable(transitionTableData));
     if (implicationTable.children.length > 1) implicationTable.children[0].remove();
     implicationTableBody.classList.remove("hide");
@@ -75,12 +83,32 @@ generateButton.addEventListener("click", e => {
             inline: "nearest"
         });
     }, 0);
+    nextButton.disabled = false
+    minimizedTable.innerHTML = "";
+    minimizedTable.classList.add("hide");
 });
 downloadButton.addEventListener("click", e => {
     downloadJSON(transitionTableData);
 });
 fileElement.addEventListener("input", e => {
     loadJSON(e);
+});
+nextButton.addEventListener("click", e => {
+    let isFinished = !continueImplicationTable();
+
+    if (isFinished) {
+        nextButton.style.setProperty("--tip-msg", '"Table is simplified"');
+        nextButton.disabled = true
+        const reducedTable = reduceImplicationTable();
+        minimizedTable.innerHTML = "";
+        minimizedTable.append(minimizedTableGenerator(reducedTable, currentMode, currentInputNum));
+        minimizedTable.classList.remove("hide");
+        document.body.scrollIntoView({
+            behavior: "smooth",
+            block: "end",
+            inline: "nearest"
+        });
+    }
 });
 
 // Functions
@@ -232,7 +260,7 @@ function readTable(): TableData {
         inputNum: numInputs,
     };
 
-    const rows = document.querySelectorAll(".row");
+    const rows = transitionTable.querySelectorAll(".row");
 
     if (isMooreCheck.checked) {
         // Moore
@@ -365,28 +393,44 @@ function generateImplicationTable(tableData: TableData): HTMLDivElement {
         for (let j = 0; j < i; j++) {
             const rowElement = document.createElement("div");
             rowElement.classList.add("implication-row-element");
+            rowElement.dataset.coords = JSON.stringify([tableData.presentState[i], tableData.presentState[j]].sort());
+            rowElement.dataset.val = "[]";
 
             if (JSON.stringify(tableData.output[i]) == JSON.stringify(tableData.output[j])) {
+                let equivalence = 0;
                 for (let z = 0; z < tableData.nextState[j].length; z++) {
-                    if (tableData.nextState[i][z] == tableData.nextState[j][z]) continue;
+                    if (tableData.nextState[i][z] == tableData.nextState[j][z]) {
+                        equivalence++;
 
-                    if (tableData.nextState[j][z] == tableData.presentState[i] && tableData.nextState[i][z] == tableData.presentState[j]) {
-                        const element = document.createElement("p");
+                        if (equivalence == tableData.nextState[i].length) {
+                            const element = document.createElement("p");
+                            rowElement.innerHTML = "";
+                            element.classList.add("correct");
+                            element.textContent = "✓";
+                            rowElement.dataset.val = "✓";
+                            rowElement.append(element);
+                            break;
+                        } else continue;
+                    }
+
+                    const element = document.createElement("p");
+                    element.textContent = `${[tableData.nextState[j][z], tableData.nextState[i][z]].sort()[0]}-${[tableData.nextState[j][z], tableData.nextState[i][z]].sort()[1]}\n`;
+                    rowElement.dataset.val = JSON.stringify([...JSON.parse(rowElement.dataset.val), [tableData.nextState[j][z], tableData.nextState[i][z]].sort()].sort());
+                    if (rowElement.dataset.coords == rowElement.dataset.val.substring(1, rowElement.dataset.val.length - 1)) {
                         rowElement.innerHTML = "";
                         element.classList.add("correct");
                         element.textContent = "✓";
+                        rowElement.dataset.val = "✓";
                         rowElement.append(element);
                         break;
-                    } else {
-                        const element = document.createElement("p");
-                        element.textContent = `${tableData.nextState[j][z]}-${tableData.nextState[i][z]}\n`;
-                        rowElement.append(element);
                     }
+                    rowElement.append(element);
                 }
             } else {
                 const element = document.createElement("p");
                 element.classList.add("wrong");
                 element.textContent = "x";
+                rowElement.dataset.val = "x";
                 rowElement.append(element);
             }
             row.append(rowElement);
@@ -405,7 +449,7 @@ function generateImplicationTable(tableData: TableData): HTMLDivElement {
         table.append(row);
     }
     table.append(sideColumn, footerRow);
-    gsap.fromTo([table.querySelectorAll(".implication-row-element"), table.querySelectorAll(".implication-side-column p"), table.querySelectorAll(".implication-footer-row p"), table.querySelectorAll(".implication-row-element p"), nextButton], {
+    gsap.fromTo([table.querySelectorAll(".implication-row-element"), table.querySelectorAll(".implication-side-column p"), table.querySelectorAll(".implication-footer-row p"), table.querySelectorAll(".implication-row-element p"), nextButtonBody], {
         opacity: 0,
         y: 15,
     }, {
@@ -414,6 +458,222 @@ function generateImplicationTable(tableData: TableData): HTMLDivElement {
         ease: "elastic.out",
         opacity: 1,
         y: 0,
+        clearProps: "transform",
+        onComplete: function () {
+            this.kill();
+        }
+    });
+
+    return table;
+}
+function continueImplicationTable() {
+    const tableContent = implicationTable.children[0];
+    const stage: HTMLElement[][] = [];
+    let change = false;
+    tableContent.querySelectorAll<HTMLElement>(".implication-row").forEach(row => {
+        Array.from(row.children as HTMLCollectionOf<HTMLElement>).forEach(child => {
+            const elementVal = child.getAttribute("data-val")!;
+            if (elementVal == "x" || elementVal == "✓") return;
+
+            const elementValArr = JSON.parse(elementVal);
+
+            let foundWrong = false;
+            let foundCorrect = false;
+            elementValArr.forEach((element: string[]) => {
+                let auxElement = tableContent.querySelector<HTMLElement>(`[data-coords='${JSON.stringify(element.sort())}']`);
+
+                const auxElementVal = auxElement!.getAttribute("data-val")!;
+                if (auxElementVal != "x" && auxElementVal != "✓") return;
+
+                foundWrong = auxElement?.dataset.val == "x";
+                foundCorrect = auxElement?.dataset.val == "✓";
+            });
+
+            if (foundCorrect) {
+                const correctElement = document.createElement("p");
+                correctElement.textContent = "✓";
+                correctElement.classList.add("correct-next-element");
+                stage.push([child, correctElement]);
+                change = true;
+            } else if (foundWrong) {
+                const wrongElement = document.createElement("p");
+                wrongElement.textContent = "x";
+                wrongElement.classList.add("wrong-next-element");
+                stage.push([child, wrongElement]);
+                change = true;
+            }
+
+            stage.forEach(element => {
+                element[0].dataset.val = element[1].textContent;
+                element[0].append(element[1]);
+            });
+
+            gsap.fromTo(stage.map(pair => pair[1]), {
+                opacity: 0,
+                y: 15,
+            }, {
+                stagger: 0.06,
+                duration: 0.8,
+                ease: "elastic.out",
+                opacity: 1,
+                y: 0,
+                clearProps: "all",
+                onComplete: function () {
+                    this.kill();
+                }
+            });
+
+        });
+    });
+    return change;
+}
+function reduceImplicationTable() {
+    const tableContent = implicationTable.children[0];
+    const states = transitionTableData.presentState;
+    const compatiblePairs: [string, string][] = [];
+    tableContent.querySelectorAll<HTMLElement>(".implication-row-element").forEach(cell => {
+        if (cell.dataset.val == "x") return;
+        const coords: [string, string] = JSON.parse(cell.dataset.coords!);
+        compatiblePairs.push(coords);
+    });
+
+    const array: string[][] = [];
+
+    states.forEach(element => {
+        for (let i = 0; i < compatiblePairs.length; i++) {
+            const pair = compatiblePairs[i];
+            if (!pair.includes(element)) continue;
+
+            const otherElement = pair[0] == element ? pair[1] : pair[0];
+
+            const elementGroupIdx = array.findIndex(subArray => subArray.includes(element));
+            const otherGroupIdx = array.findIndex(subArray => subArray.includes(otherElement));
+
+            if (elementGroupIdx == -1 && otherGroupIdx == -1) {
+                array.push([...pair]);
+            } else if (elementGroupIdx == -1) {
+                array[otherGroupIdx].push(element);
+            } else if (otherGroupIdx == -1) {
+                array[elementGroupIdx].push(otherElement);
+            } else if (elementGroupIdx != otherGroupIdx) {
+                array[elementGroupIdx].push(...array[otherGroupIdx]);
+                array.splice(otherGroupIdx, 1);
+            }
+        }
+
+        if (array.findIndex(subArray => subArray.includes(element)) == -1) {
+            array.push([element]);
+        }
+    });
+
+    return array;
+}
+function generateLabels(width: number): string[] {
+    const result: string[] = [];
+
+    for (let i = 0; i < width; i++) {
+        let label = "";
+        let n = i;
+
+        do {
+            label = String.fromCharCode(65 + (n % 26)) + label;
+            n = Math.floor(n / 26) - 1;
+        } while (n >= 0);
+
+        result.push(label);
+    }
+
+    return result;
+}
+function minimizedTableGenerator(reducedImplicationTable: string[][], mode: "mealy" | "moore", inputNum: number): HTMLDivElement {
+    const table = document.createElement("div");
+    const minimizedTableData: TableData = {
+        presentState: [],
+        nextState: [],
+        output: [],
+        mode,
+        inputNum,
+    }
+    const labels = generateLabels(reducedImplicationTable.length);
+
+    for (let i = 0; i < reducedImplicationTable.length; i++) {
+        minimizedTableData.presentState.push(labels[i]);
+    }
+
+    for (let i = 0; i < reducedImplicationTable.length; i++) {
+        const representativeState = reducedImplicationTable[i][0];
+        const originalStateIndex = transitionTableData.presentState.indexOf(representativeState);
+
+        const nextStateTemp = transitionTableData.nextState[originalStateIndex];
+        const nextStateArr: string[] = [];
+
+        for (let j = 0; j < nextStateTemp.length; j++) {
+            const targetGroup = reducedImplicationTable.findIndex(subArray => subArray.includes(nextStateTemp[j]));
+            nextStateArr.push(minimizedTableData.presentState[targetGroup]);
+        }
+
+        minimizedTableData.nextState.push(nextStateArr);
+        minimizedTableData.output.push(transitionTableData.output[originalStateIndex]);
+    }
+
+    console.log(minimizedTableData);
+
+    const presentStateColumn = document.createElement("div");
+    presentStateColumn.classList.add("present-state-column");
+    minimizedTableData.presentState.forEach(state => {
+        const element = document.createElement("div");
+        element.classList.add("minimized-row");
+        const subElement = document.createElement("div");
+        const text = document.createElement("p");
+        text.textContent = state;
+        subElement.append(text);
+        element.append(subElement);
+        presentStateColumn.append(element);
+    });
+
+    const nextStateColumn = document.createElement("div");
+    nextStateColumn.classList.add("next-state-column");
+    minimizedTableData.nextState.forEach(state => {
+        const element = document.createElement("div");
+        element.classList.add("minimized-row");
+        state.forEach(subState => {
+            const subElement = document.createElement("div");
+            const text = document.createElement("p");
+            text.textContent = subState;
+            subElement.append(text);
+            element.append(subElement);
+        });
+        nextStateColumn.append(element);
+    });
+
+    const outputColumn = document.createElement("div");
+    outputColumn.classList.add("output-column");
+    minimizedTableData.output.forEach(state => {
+        const element = document.createElement("div");
+        element.classList.add("minimized-row");
+        state.forEach(subState => {
+            const subElement = document.createElement("div");
+            const text = document.createElement("p");
+            text.textContent = subState;
+            subElement.append(text);
+            element.append(subElement);
+        });
+        outputColumn.append(element);
+    });
+
+    table.append(presentStateColumn, nextStateColumn, outputColumn);
+
+    gsap.fromTo([table.querySelectorAll(".minimized-row div"), table.querySelectorAll(".minimized-row div p")], {
+        opacity: 0,
+        y: 15,
+    }, {
+        delay: 0.25,
+        stagger: 0.06,
+        duration: 0.8,
+        ease: "elastic.out",
+        opacity: 1,
+        y: 0,
+        clearProps: "transform",
         onComplete: function () {
             this.kill();
         }
@@ -422,7 +682,7 @@ function generateImplicationTable(tableData: TableData): HTMLDivElement {
     return table;
 }
 
-// Sample
+// Sample 1
 transitionTable.appendChild(addARow({
     presentStateVal: "a", nextStateVal: ["h", "c"], outputVal: ["1", "0"]
 }));
@@ -447,5 +707,6 @@ transitionTable.appendChild(addARow({
 transitionTable.appendChild(addARow({
     presentStateVal: "h", nextStateVal: ["a", "c"], outputVal: ["1", "0"]
 }));
+
 transitionTableData = readTable();
 enableDisableGenerateButton(transitionTableData);
