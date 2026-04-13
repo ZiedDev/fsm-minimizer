@@ -24,7 +24,7 @@ body {
 #app {
     padding: 4rem 0;
     width: 100%;
-    height: calc(100vh - 8rem);
+    /* min-height: calc(100vh - 8rem); */
     display: flex;
     flex-direction: column;
     justify-content: start;
@@ -33,17 +33,19 @@ body {
 }
 
 button {
+    /* height: ; */
     cursor: pointer;
     background-color: #5ba673;
     border-radius: 2rem;
     border: none;
     padding: 0 1rem;
     margin: 0 auto;
+    height: 3rem;
     box-shadow: var(--shadow-elevation-medium);
     --tip-msg: "Tool tip";
     position: relative;
 
-    transition: 250ms background-color ease;
+    transition: background-color 250ms ease, transform 250ms ease;
 
     &::after {
         user-select: none;
@@ -85,6 +87,7 @@ button {
     }
 
     &:disabled {
+        transform: scale(0.97);
         cursor: default;
         background-color: #2d5339;
         border-radius: 2rem;
@@ -127,6 +130,7 @@ input[type="file"] {
     color: #e6edf3;
     visibility: hidden;
     position: relative;
+
 
     &::after {
         visibility: visible;
@@ -175,7 +179,12 @@ input[type="checkbox"] {
         height: 1.25rem;
         border-radius: 50%;
         background-color: rgb(50, 111, 164);
-        transition: left 150ms ease;
+        transform: scale(1);
+        transition: left 150ms ease, transform 250ms ease;
+    }
+
+    &:hover::after {
+        transform: scale(1.1);
     }
 
     &:checked::after {
@@ -187,6 +196,7 @@ input[type="checkbox"] {
     --number-of-inputs: 1;
     display: flex;
     flex-direction: column;
+    position: relative;
 
     width: 40rem;
     padding: 1rem;
@@ -492,19 +502,178 @@ input[type="checkbox"] {
             }
         }
     }
+
+    .import-export-container {
+        position: absolute;
+        bottom: -0.5rem;
+        right: -1rem;
+        display: flex;
+        justify-content: space-between;
+        width: calc(100% + 2rem);
+
+        .export-button {
+            background-color: #5ba673;
+            padding: 0.5rem;
+            border-radius: 2rem;
+            display: flex;
+            align-items: center;
+            transform: rotate(-4deg);
+            width: 5.5rem;
+            transition: transform 250ms ease;
+
+            button {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 0;
+                background-color: transparent;
+
+                svg {
+                    width: 2rem;
+                    height: 2rem;
+                }
+            }
+
+            &::after {
+                margin-left: 0.25rem;
+                content: "Export";
+                text-align: center;
+            }
+
+            &:hover {
+                transform: rotate(-7deg) scale(1.05);
+            }
+        }
+
+        .import-button {
+            display: flex;
+            align-items: center;
+            position: relative;
+            background-color: #5ba673;
+            padding: 0.5rem;
+            border-radius: 2rem;
+            transform: rotate(7deg);
+            width: 6rem;
+            transition: transform 250ms ease;
+
+            input {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+
+                &::after {
+                    border-radius: 0;
+                    opacity: 0;
+                }
+            }
+
+            svg {
+                pointer-events: none;
+                position: absolute;
+                top: 0.5rem;
+                left: 0.5rem;
+                width: 2rem;
+                height: 2rem;
+            }
+
+            &::after {
+                margin-left: 2.5rem;
+                content: "Import";
+                text-align: center;
+                pointer-events: none;
+            }
+
+            &:hover {
+                transform: rotate(9deg) scale(1.05);
+            }
+        }
+    }
 }
 
-.import-export-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    width: 20rem;
 
-    * {
-        flex: 1;
-        width: 100%;
-        height: 100%;
+.implication-table {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    position: relative;
+
+    width: 40rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    gap: 2rem;
+    background-color: #020408;
+    box-shadow: var(--shadow-elevation-medium);
+
+    .content {
+        display: flex;
+        gap: 5rem;
+        position: relative;
+
+        .implication-row {
+            display: flex;
+            min-height: 3rem;
+            min-width: 4.388rem;
+            box-sizing: border-box;
+
+            .implication-row-element {
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                min-height: 3rem;
+                min-width: 4.388rem;
+                box-shadow: inset 0 0 0 1pt #e6edf3;
+
+                .wrong {
+                    color: #c14740;
+                }
+
+                .correct {
+                    color: #5ba673;
+                }
+            }
+        }
+
+        .implication-side-column {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            top: 0;
+            bottom: 0;
+            right: 100%;
+
+            p {
+                height: 3rem;
+            }
+        }
+
+        .implication-footer-row {
+            position: absolute;
+            display: flex;
+            top: 100%;
+            left: 0;
+            right: 0;
+        }
+
+        p {
+            /* height: 3rem; */
+            min-width: 4.388rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+        }
+
+    }
+
+    .implication-table-next-button {
+
     }
 }
 

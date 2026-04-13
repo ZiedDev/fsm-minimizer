@@ -14,7 +14,9 @@ const generateButton = document.querySelector<HTMLButtonElement>("#generate-butt
 const numberOfInputsInput = document.querySelector<HTMLInputElement>('#number-of-inputs-input')!;
 const downloadButton = document.querySelector<HTMLInputElement>('#download-button')!;
 const fileElement = document.querySelector<HTMLInputElement>("#file")!;
-const implicationTable = document.querySelector<HTMLDivElement>("#implication-table");
+const implicationTableBody = document.querySelector<HTMLDivElement>("#implication-table")!;
+const implicationTable = document.querySelector<HTMLDivElement>("#implication-table .content")!;
+const nextButton = document.querySelector(".implication-table-next-button");
 
 // Types
 type TableData = {
@@ -63,7 +65,16 @@ addRowButton.addEventListener("click", e => {
     transitionTable.appendChild(addARow());
 });
 generateButton.addEventListener("click", e => {
-    generateImplicationTable(transitionTableData);
+    implicationTable.append(generateImplicationTable(transitionTableData));
+    if (implicationTable.children.length > 1) implicationTable.children[0].remove();
+    implicationTableBody.classList.remove("hide");
+    setTimeout(() => {
+        document.body.scrollIntoView({
+            behavior: "smooth",
+            block: "end",
+            inline: "nearest"
+        });
+    }, 0);
 });
 downloadButton.addEventListener("click", e => {
     downloadJSON(transitionTableData);
@@ -213,7 +224,7 @@ function addARow(
     return row;
 }
 function readTable(): TableData {
-    const transitionTableData: TableData = {
+    const transitionTableExtractedData: TableData = {
         presentState: [],
         nextState: [],
         output: [],
@@ -226,38 +237,39 @@ function readTable(): TableData {
     if (isMooreCheck.checked) {
         // Moore
         rows.forEach(row => {
-            transitionTableData.presentState.push(row.querySelector<HTMLInputElement>(".present-state-input")!.value)
+            transitionTableExtractedData.presentState.push(row.querySelector<HTMLInputElement>(".present-state-input")!.value)
             for (let i = 0; i < numInputs; i++) {
-                transitionTableData.nextState.push([row.querySelectorAll<HTMLInputElement>(".next-input")[i * 2]!.value, row.querySelectorAll<HTMLInputElement>(".next-input")[i * 2 + 1]!.value])
+                transitionTableExtractedData.nextState.push([row.querySelectorAll<HTMLInputElement>(".next-input")[i * 2]!.value, row.querySelectorAll<HTMLInputElement>(".next-input")[i * 2 + 1]!.value])
             }
-            transitionTableData.output.push([row.querySelector<HTMLInputElement>(".output-input")!.value]);
+            transitionTableExtractedData.output.push([row.querySelector<HTMLInputElement>(".output-input")!.value]);
         });
     } else {
         // Mealy
         rows.forEach(row => {
-            transitionTableData.presentState.push(row.querySelector<HTMLInputElement>(".present-state-input")!.value)
+
+            transitionTableExtractedData.presentState.push(row.querySelector<HTMLInputElement>(".present-state-input")!.value)
 
             const nextStateArr = [];
             for (let i = 0; i < numInputs; i++) {
                 nextStateArr.push(row.querySelectorAll<HTMLInputElement>(".next-input")[i * 2]!.value, row.querySelectorAll<HTMLInputElement>(".next-input")[i * 2 + 1]!.value)
             }
-            transitionTableData.nextState.push(nextStateArr);
+            transitionTableExtractedData.nextState.push(nextStateArr);
 
             const outputArr = [];
             for (let i = 0; i < numInputs; i++) {
                 outputArr.push(row.querySelectorAll<HTMLInputElement>(".output-input")[i * 2]!.value, row.querySelectorAll<HTMLInputElement>(".output-input")[i * 2 + 1]!.value);
             }
-            transitionTableData.output.push(outputArr);
+            transitionTableExtractedData.output.push(outputArr);
         });
     }
 
-    return transitionTableData;
+    return transitionTableExtractedData;
 }
 function downloadJSON(tableData: TableData) {
     let blob = new Blob([JSON.stringify(tableData)], { type: "application/json" });
     const a = document.createElement("a");
     const todayDate = new Date().toISOString().slice(0, 10);
-    a.download = `My Implication Table ${todayDate}.json`;
+    a.download = `My Table ${todayDate}.json`;
     a.href = window.URL.createObjectURL(blob);
     a.click(); // Trigger download
 }
@@ -334,14 +346,106 @@ function enableDisableGenerateButton(tableData: TableData, { forceDisable }: { f
         generateButton.style.setProperty("--tip-msg", "");
     }
 }
-function generateImplicationTable(tableData: TableData) {
+function generateImplicationTable(tableData: TableData): HTMLDivElement {
+    const table = document.createElement("div");
+    const sideColumn = document.createElement("div");
+    sideColumn.classList.add("implication-side-column");
+    const footerRow = document.createElement("div");
+    footerRow.classList.add("implication-footer-row");
+
+    for (let i = 0; i < tableData.presentState.length; i++) {
+        if (i == 0) continue;
+        const row = document.createElement("div");
+        row.classList.add("implication-row");
+
+        const sideElement = document.createElement("p");
+        sideElement.textContent = tableData.presentState[i];
+        sideColumn.append(sideElement);
+
+        for (let j = 0; j < i; j++) {
+            const rowElement = document.createElement("div");
+            rowElement.classList.add("implication-row-element");
+
+            if (JSON.stringify(tableData.output[i]) == JSON.stringify(tableData.output[j])) {
+                for (let z = 0; z < tableData.nextState[j].length; z++) {
+                    if (tableData.nextState[i][z] == tableData.nextState[j][z]) continue;
+
+                    if (tableData.nextState[j][z] == tableData.presentState[i] && tableData.nextState[i][z] == tableData.presentState[j]) {
+                        const element = document.createElement("p");
+                        rowElement.innerHTML = "";
+                        element.classList.add("correct");
+                        element.textContent = "✓";
+                        rowElement.append(element);
+                        break;
+                    } else {
+                        const element = document.createElement("p");
+                        element.textContent = `${tableData.nextState[j][z]}-${tableData.nextState[i][z]}\n`;
+                        rowElement.append(element);
+                    }
+                }
+            } else {
+                const element = document.createElement("p");
+                element.classList.add("wrong");
+                element.textContent = "x";
+                rowElement.append(element);
+            }
+            row.append(rowElement);
+
+            if (j + 1 == i) {
+                const footerElement = document.createElement("p");
+                footerElement.textContent = tableData.presentState[j];
+                footerRow.append(footerElement);
+            }
+
+            setTimeout(() => {
+                sideElement.style.height = `${rowElement.getBoundingClientRect().height}px`;
+            }, 0);
+        }
+
+        table.append(row);
+    }
+    table.append(sideColumn, footerRow);
+    gsap.fromTo([table.querySelectorAll(".implication-row-element"), table.querySelectorAll(".implication-side-column p"), table.querySelectorAll(".implication-footer-row p"), table.querySelectorAll(".implication-row-element p"), nextButton], {
+        opacity: 0,
+        y: 15,
+    }, {
+        stagger: 0.06,
+        duration: 0.8,
+        ease: "elastic.out",
+        opacity: 1,
+        y: 0,
+        onComplete: function () {
+            this.kill();
+        }
+    });
+
+    return table;
 }
 
+// Sample
 transitionTable.appendChild(addARow({
-    presentStateVal: "a", nextStateVal: ["b", "c", 'd', 'e'], outputVal: ["1", "0", "0", "1"]
+    presentStateVal: "a", nextStateVal: ["h", "c"], outputVal: ["1", "0"]
 }));
 transitionTable.appendChild(addARow({
-    presentStateVal: "c", nextStateVal: ["b", "c", 'd', 'e'], outputVal: ["1", "0", "0", "1"]
+    presentStateVal: "b", nextStateVal: ["c", "d"], outputVal: ["0", "1"]
+}));
+transitionTable.appendChild(addARow({
+    presentStateVal: "c", nextStateVal: ["h", "b"], outputVal: ["0", "0"]
+}));
+transitionTable.appendChild(addARow({
+    presentStateVal: "d", nextStateVal: ["f", "h"], outputVal: ["0", "0"]
+}));
+transitionTable.appendChild(addARow({
+    presentStateVal: "e", nextStateVal: ["c", "f"], outputVal: ["0", "1"]
+}));
+transitionTable.appendChild(addARow({
+    presentStateVal: "f", nextStateVal: ["f", "g"], outputVal: ["0", "0"]
+}));
+transitionTable.appendChild(addARow({
+    presentStateVal: "g", nextStateVal: ["g", "c"], outputVal: ["1", "0"]
+}));
+transitionTable.appendChild(addARow({
+    presentStateVal: "h", nextStateVal: ["a", "c"], outputVal: ["1", "0"]
 }));
 transitionTableData = readTable();
 enableDisableGenerateButton(transitionTableData);
