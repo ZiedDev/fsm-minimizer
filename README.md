@@ -1,6 +1,6 @@
 # fsm-minimizer 🔥
 
-> Melt down complex finite state machines into their minimal form
+> Minimize complex finite state machines using implication tables
 
 FSM Minimizer is an interactive web tool for minimizing finite state machines (FSM) using implication tables. It supports both **Moore** and **Mealy** machine types and provides a visual, step-by-step reduction process.
 
@@ -19,22 +19,58 @@ FSM Minimizer is an interactive web tool for minimizing finite state machines (F
 ### Prerequisites
 
 - Node.js
-- npm or yarn
+- npm, yarn, or bun
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/fsmelt.git
+git clone https://github.com/ZiedDev/fsm-minimizer/
 
 # Navigate to project directory
-cd fsmelt
+cd fsm-minimizer
 
 # Install dependencies
 npm install
+# or
+yarn install
+# or
+bun install
 
 # Start development server
 npm run dev
+# or
+yarn dev
+# or
+bun dev
+```
+
+### Build for Production
+
+```bash
+# Build the project
+npm run build
+# or
+yarn build
+# or
+bun run build
+
+# Preview production build
+npm run preview
+# or
+yarn preview
+# or
+bun preview
+```
+
+### Deploy to GitHub Pages
+
+```bash
+npm run deploy
+# or
+yarn deploy
+# or
+bun run deploy
 ```
 
 ## 📖 How to Use
@@ -45,8 +81,8 @@ npm run dev
    - Click **+** to add state rows
 
 ### 2. **Enter State Information**
-   - **Present State**: Current state name (e.g., A, B, C)
-   - **Next State**: Transition states for each input combination
+   - **Present State**: Current state name (e.g., a, b, c, d)
+   - **Next State**: Transition states for each input combination (X₀=0, X₀=1, etc.)
    - **Output**: Output values (single for Moore, per-transition for Mealy)
 
 ### 3. **Generate Implication Table**
@@ -55,8 +91,8 @@ npm run dev
 
 ### 4. **Step Through Reduction**
    - Click **Next** to progressively simplify the implication table
-   - Compatible states are marked with **✓**
-   - Incompatible states are marked with **x**
+   - Compatible states are marked with <span style="color:green">**✓**</span>
+   - Incompatible states are marked with <span style="color:red">**×**</span>
 
 ### 5. **View Minimized Result**
    - Once complete, see your minimized state machine
@@ -78,12 +114,12 @@ Here's a sample Mealy machine included in the code:
 | g             | g    | c    | 1             | 0             |
 | h             | a    | c    | 1             | 0             |
 
-After minimization, this reduces to fewer equivalent states.
+After minimization, this reduces to fewer equivalent states using the implication table method.
 
 ## 💾 Import/Export
 
 ### Export
-Click the **Download** button to save your current table as a JSON file.
+Click the **Download** button to save your current table as a JSON file. The file will be named `My Table [DATE].json`.
 
 ### Import
 Click **Choose File** to load a previously saved JSON file.
@@ -101,38 +137,71 @@ Click **Choose File** to load a previously saved JSON file.
 
 ## 🛠️ Tech Stack
 
-- **TypeScript** - Type-safe development
-- **Vite** - Fast build tool and dev server
-- **GSAP** - Professional-grade animations
+- **TypeScript** (~6.0.2) - Type-safe development
+- **Vite** (^8.0.4) - Fast build tool and dev server
+- **GSAP** (^3.14.2) - Professional-grade animations with SplitText plugin
 - **CSS Grid** - Responsive table layouts
 - **HTML5** - Modern semantic markup
+- **Mona Sans** - Custom font for UI
 
 ## 📁 Project Structure
 
 ```
-fsmelt/
+fsm-minimizer/
 ├── src/
-│   ├── main.ts           # Core application logic
-│   ├── style.css         # Styling and animations
-│   ├── assets/
-│   │   └── trashIcon.svg # Delete button icon
-│   └── vite-env.d.ts     # Type definitions
-├── index.html            # Main HTML file
-├── package.json          # Dependencies
-├── tsconfig.json         # TypeScript config
-└── README.md            # This file
+│   ├── main.ts              # Core application logic
+│   ├── style.css            # Styling and animations
+│   └── assets/
+│       ├── fonts/
+│       │   └── Mona Sans/   # Custom font files
+│       │       ├── LICENSE
+│       │       ├── Mona-Sans.ttf
+│       │       └── TTF/     # Individual font weights
+│       └── trashIcon.svg    # Delete button icon
+├── public/
+│   └── favicon.svg          # App favicon
+├── dist/                    # Production build (generated)
+├── index.html               # Main HTML file
+├── package.json             # Dependencies and scripts
+├── tsconfig.json            # TypeScript configuration
+├── bun.lock                 # Lock file
+├── .gitignore              # Git ignore rules
+└── README.md               # This file
 ```
 
 ## 🎯 Algorithm Overview
 
-FSMelt uses the **implication table method** for FSM minimization:
+FSM Minimizer uses the **implication table method** for FSM minimization:
 
 1. **Build Implication Table**: Create a triangular matrix comparing all state pairs
-2. **Mark Incompatible Pairs**: States with different outputs are incompatible (marked with ✗)
+2. **Mark Incompatible Pairs**: States with different outputs are incompatible (marked with <span style="color:red">**×**</span>)
 3. **Check Implications**: For each pair, check if their next states are compatible
-4. **Iterate**: Repeat until no new incompatibilities are found
+   - If states transition to incompatible pairs, mark them as incompatible
+   - If states transition to the same states, mark them as compatible (<span style="color:green">**✓**</span>)
+4. **Iterate**: Click "Next" to repeat until no new incompatibilities are found
 5. **Group Compatible States**: Merge all compatible state pairs into equivalence classes
-6. **Generate Minimized FSM**: Create new transition table using merged states
+6. **Generate Minimized FSM**: Create new transition table using merged states with new labels (A, B, C...)
+
+## 🎨 Features in Detail
+
+### Animations
+- GSAP-powered smooth transitions for all UI interactions
+- SplitText animations for character-by-character text reveals
+- Elastic easing for natural, playful motion
+- Smooth scrolling to new content sections
+
+### Validation
+- Real-time input validation
+- Duplicate state detection
+- Empty field detection
+- Visual feedback with tooltips on disabled buttons
+
+### User Experience
+- Responsive design with CSS Grid
+- Mona Sans typography
+- Interactive row deletion with animation
+- Auto-scrolling to relevant content
+- Dynamic table headers based on input count
 
 ## 🤝 Contributing
 
@@ -144,21 +213,17 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - Implication table algorithm from digital logic design theory
-- GSAP for smooth animations
-- Vite for blazing-fast development experience
+- **GSAP** for smooth, professional animations
+- **Vite** for blazing-fast development experience
+- **Mona Sans** font by GitHub
+- Solar Icons by 480 Design (CC BY 4.0)
 
 ## 📧 Contact
 
-Your Name - [@yourtwitter](https://twitter.com/yourtwitter)
-
-Project Link: [https://github.com/yourusername/fsmelt](https://github.com/yourusername/fsmelt)
+Discord: [ohzied](https://discord.com/users/484808856128585750)
 
 ---
 
