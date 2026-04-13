@@ -4,6 +4,8 @@
 
 FSM Minimizer is an interactive web tool for minimizing finite state machines (FSM) using implication tables. It supports both **Moore** and **Mealy** machine types and provides a visual, step-by-step reduction process.
 
+![FSM Minimizer Demo](./public/showcase.gif)
+
 ## ✨ Features
 
 - 🎯 **Dual Mode Support**: Works with both Moore and Mealy state machines
