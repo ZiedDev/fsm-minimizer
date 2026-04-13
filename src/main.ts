@@ -49,11 +49,11 @@ let currentMode: "mealy" | "moore";
 let currentInputNum: number;
 
 // Events
-isMooreCheck.addEventListener("click", e => {
+isMooreCheck.addEventListener("click", () => {
     transitionTable.innerHTML = "";
     transitionTable.appendChild(addARow());
 });
-numberOfInputsInput.addEventListener("change", e => {
+numberOfInputsInput.addEventListener("change", () => {
     if (numberOfInputsInput.value == "") return;
     if (numInputs == Number(numberOfInputsInput.value)) return;
 
@@ -64,7 +64,7 @@ numberOfInputsInput.addEventListener("change", e => {
     // update css variables
     transitionTableBody.style.setProperty("--number-of-inputs", String(numInputs));
 });
-addRowButton.addEventListener("click", e => {
+addRowButton.addEventListener("click", () => {
     gsap.fromTo(addRowButton, {
         rotation: "0deg",
     }, {
@@ -75,7 +75,7 @@ addRowButton.addEventListener("click", e => {
     });
     transitionTable.appendChild(addARow());
 });
-generateButton.addEventListener("click", e => {
+generateButton.addEventListener("click", () => {
     currentMode = transitionTableData.mode;
     currentInputNum = transitionTableData.inputNum;
     implicationTable.append(generateImplicationTable(transitionTableData));
@@ -92,13 +92,13 @@ generateButton.addEventListener("click", e => {
     minimizedTable.innerHTML = "";
     minimizedTableBody.classList.add("hide");
 });
-downloadButton.addEventListener("click", e => {
+downloadButton.addEventListener("click", () => {
     downloadJSON(transitionTableData);
 });
 fileElement.addEventListener("input", e => {
     loadJSON(e);
 });
-nextButton.addEventListener("click", e => {
+nextButton.addEventListener("click", () => {
     let isFinished = !continueImplicationTable();
 
     if (isFinished) {
@@ -211,7 +211,7 @@ function addARow(
     trashIconImg.src = trashIcon;
     deleteButton.tabIndex = -1;
     deleteButton.append(trashIconImg);
-    deleteButton.addEventListener('click', e => {
+    deleteButton.addEventListener('click', () => {
         gsap.to(row, {
             "--scale": 0,
             height: 0,
@@ -248,7 +248,7 @@ function addARow(
 
     row.append(deleteButton, presentState, nextState, output);
     row.querySelectorAll<HTMLInputElement>("input").forEach(input => {
-        input.addEventListener("input", e => {
+        input.addEventListener("input", () => {
             transitionTableData = readTable();
             enableDisableGenerateButton(transitionTableData);
         });
@@ -686,7 +686,7 @@ function minimizedTableGenerator(reducedImplicationTable: string[][], mode: "mea
         y: 0,
         clearProps: "transform",
         onComplete: function () {
-            let split = SplitText.create(comment, {
+            SplitText.create(comment, {
                 type: "words, chars",
                 onSplit: (self) => {
                     minimizedTableComment.classList.remove("invisible");
