@@ -27,7 +27,7 @@ const minimizedTableComment = document.querySelector<HTMLDivElement>("#minimized
 const equivalenceDiagramBody = document.querySelector<HTMLDivElement>("#equivalence-diagram")!;
 const equivalenceSvg = document.querySelector<SVGSVGElement>("#equivalence-svg")!;
 const equivalenceLegend = document.querySelector<HTMLDivElement>("#equivalence-legend")!;
-const equivalenceDiagramNextButton = document.querySelector<HTMLDivElement>(".equivalence-diagram-next-button button")!;
+const equivalenceDiagramNextButton = document.querySelector<HTMLButtonElement>(".equivalence-diagram-next-button button")!;
 
 // Types
 type TableData = {
@@ -126,6 +126,8 @@ equivalenceDiagramNextButton.addEventListener("click", () => {
     minimizedTableComment.classList.add("invisible");
     minimizedTableBody.classList.remove("hide");
 
+    equivalenceDiagramNextButton.style.setProperty("--tip-msg", '"Already clicked that"');
+    equivalenceDiagramNextButton.disabled = true;
     minimizedTableBody.scrollIntoView({
         behavior: "smooth",
         block: "end",
