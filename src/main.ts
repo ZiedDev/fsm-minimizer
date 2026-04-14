@@ -24,6 +24,11 @@ const minimizedTableBody = document.querySelector<HTMLDivElement>("#minimized-ta
 const minimizedTable = document.querySelector<HTMLDivElement>("#minimized-table .content")!;
 const minimizedTableHeader = document.querySelector<HTMLDivElement>("#minimized-table .header")!;
 const minimizedTableComment = document.querySelector<HTMLDivElement>("#minimized-table .comment")!;
+const equivalenceDiagramBody = document.querySelector<HTMLDivElement>("#equivalence-diagram")!;
+const equivalenceSvg = document.querySelector<SVGSVGElement>("#equivalence-svg")!;
+const equivalenceLegend = document.querySelector<HTMLDivElement>("#equivalence-legend")!;
+const equivalenceDiagramNextButtonBody = document.querySelector<HTMLDivElement>(".equivalence-diagram-next-button")!;
+const equivalenceDiagramNextButton = document.querySelector<HTMLDivElement>(".equivalence-diagram-next-button button")!;
 
 // Types
 type TableData = {
@@ -76,13 +81,14 @@ addRowButton.addEventListener("click", () => {
     transitionTable.appendChild(addARow());
 });
 generateButton.addEventListener("click", () => {
+    equivalenceDiagramBody.classList.add("hide");
     currentMode = transitionTableData.mode;
     currentInputNum = transitionTableData.inputNum;
     implicationTable.append(generateImplicationTable(transitionTableData));
     if (implicationTable.children.length > 1) implicationTable.children[0].remove();
     implicationTableBody.classList.remove("hide");
     setTimeout(() => {
-        document.body.scrollIntoView({
+        implicationTableBody.scrollIntoView({
             behavior: "smooth",
             block: "end",
             inline: "nearest"
@@ -98,24 +104,34 @@ downloadButton.addEventListener("click", () => {
 fileElement.addEventListener("input", e => {
     loadJSON(e);
 });
-nextButton.addEventListener("click", () => {
+nextButton.addEventListener("click", e => {
     let isFinished = !continueImplicationTable();
 
     if (isFinished) {
         nextButton.style.setProperty("--tip-msg", '"Table is simplified"');
-        nextButton.disabled = true
-        const reducedTable = reduceImplicationTable();
-        minimizedTable.innerHTML = "";
+        nextButton.disabled = true;
+        generateEquivalenceDiagram(reduceImplicationTable());
 
-        minimizedTable.append(minimizedTableGenerator(reducedTable, currentMode, currentInputNum));
-        minimizedTableComment.classList.add("invisible");
-        minimizedTableBody.classList.remove("hide");
-        document.body.scrollIntoView({
+        equivalenceDiagramBody.scrollIntoView({
             behavior: "smooth",
             block: "end",
             inline: "nearest"
         });
     }
+});
+equivalenceDiagramNextButton.addEventListener("click", e => {
+    const reducedTable = reduceImplicationTable();
+
+    minimizedTable.innerHTML = "";
+    minimizedTable.append(minimizedTableGenerator(reducedTable, currentMode, currentInputNum));
+    minimizedTableComment.classList.add("invisible");
+    minimizedTableBody.classList.remove("hide");
+
+    minimizedTableBody.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+        inline: "nearest"
+    });
 });
 
 // Functions
@@ -625,12 +641,12 @@ function minimizedTableGenerator(reducedImplicationTable: string[][], mode: "mea
 
     const presentStateColumn = document.createElement("div");
     presentStateColumn.classList.add("present-state-column");
-    minimizedTableData.presentState.forEach(state => {
+    minimizedTableData.presentState.forEach((state, index) => {
         const element = document.createElement("div");
         element.classList.add("minimized-row");
         const subElement = document.createElement("div");
         const text = document.createElement("p");
-        text.textContent = state;
+        text.textContent = `{ ${reducedImplicationTable[index]} } →${state}`;
         subElement.append(text);
         element.append(subElement);
         presentStateColumn.append(element);
@@ -744,6 +760,148 @@ function updateMinimizedHeader() {
     }
 
     minimizedTableHeader.append(presentState, nextState, output)
+}
+function generateEquivalenceDiagram(equivalenceClasses: string[][]): void {
+    const svg = equivalenceSvg;
+    const centerX = 300;
+    const centerY = 300;
+    const radius = 220;
+    const nodeRadius = 25;
+
+    // Clear previous diagram
+    svg.innerHTML = '';
+    equivalenceLegend.innerHTML = '';
+
+    // Get all unique states
+    const allStates = equivalenceClasses.flat();
+    const stateCount = allStates.length;
+
+    // Color palette for equivalence classes (matches your reference image)
+    const colors = [
+        '#ef4444', // red
+        '#22c55e', // green  
+        '#3b82f6', // blue
+        '#f59e0b', // orange
+        '#a855f7', // purple
+        '#ec4899', // pink
+        '#14b8a6', // teal
+        '#f97316', // orange-red
+    ];
+
+    // Calculate positions for each state on the circle
+    const statePositions: { [key: string]: { x: number; y: number; color: string } } = {};
+
+    allStates.forEach((state, i) => {
+        const angle = (i * 2 * Math.PI) / stateCount - Math.PI / 2;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+
+        // Find which equivalence class this state belongs to
+        const classIndex = equivalenceClasses.findIndex(eq => eq.includes(state));
+        const color = colors[classIndex % colors.length];
+
+        statePositions[state] = { x, y, color };
+    });
+
+    // Draw the outer circle
+    const outerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    outerCircle.setAttribute('cx', String(centerX));
+    outerCircle.setAttribute('cy', String(centerY));
+    outerCircle.setAttribute('r', String(radius + nodeRadius));
+    outerCircle.setAttribute('fill', 'none');
+    outerCircle.setAttribute('stroke', 'currentColor');
+    outerCircle.setAttribute('stroke-width', '2');
+    outerCircle.setAttribute('opacity', '0.3');
+    svg.appendChild(outerCircle);
+
+    // Draw connections between equivalent states
+    equivalenceClasses.forEach((eqClass, classIndex) => {
+        const color = colors[classIndex % colors.length];
+
+        // Draw lines connecting all pairs in this equivalence class
+        for (let i = 0; i < eqClass.length; i++) {
+            for (let j = i + 1; j < eqClass.length; j++) {
+                const state1 = eqClass[i];
+                const state2 = eqClass[j];
+                const pos1 = statePositions[state1];
+                const pos2 = statePositions[state2];
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', String(pos1.x));
+                line.setAttribute('y1', String(pos1.y));
+                line.setAttribute('x2', String(pos2.x));
+                line.setAttribute('y2', String(pos2.y));
+                line.setAttribute('stroke', color);
+                line.setAttribute('stroke-width', '3');
+                line.setAttribute('opacity', '0.7');
+                line.classList.add('equivalence-line');
+                svg.appendChild(line);
+            }
+        }
+    });
+
+    // Draw state nodes
+    allStates.forEach((state) => {
+        const pos = statePositions[state];
+
+        // Node circle
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', String(pos.x));
+        circle.setAttribute('cy', String(pos.y));
+        circle.setAttribute('r', String(nodeRadius));
+        circle.setAttribute('fill', pos.color);
+        circle.setAttribute('stroke', 'white');
+        circle.setAttribute('stroke-width', '3');
+        circle.classList.add('state-node');
+        svg.appendChild(circle);
+
+        // State label
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', String(pos.x));
+        text.setAttribute('y', String(pos.y));
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('dominant-baseline', 'middle');
+        text.setAttribute('fill', 'white');
+        text.setAttribute('font-weight', 'bold');
+        text.setAttribute('font-size', '16');
+        text.textContent = state;
+        svg.appendChild(text);
+    });
+
+    // Create legend
+    equivalenceClasses.forEach((eqClass, classIndex) => {
+        const color = colors[classIndex % colors.length];
+
+        const legendItem = document.createElement('div');
+        legendItem.classList.add('legend-item');
+
+        const colorBox = document.createElement('div');
+        colorBox.classList.add('legend-color');
+        colorBox.style.backgroundColor = color;
+
+        const label = document.createElement('span');
+        label.textContent = `{${eqClass.join(', ')}}`;
+
+        legendItem.appendChild(colorBox);
+        legendItem.appendChild(label);
+        equivalenceLegend.appendChild(legendItem);
+    });
+
+    // Animate diagram appearance
+    gsap.fromTo([svg.querySelectorAll('.equivalence-line'), svg.querySelectorAll('.state-node'), svg.querySelectorAll('text'), equivalenceLegend.children], {
+        opacity: 0,
+        y: 15
+    }, {
+        delay: 0.3,
+        stagger: 0.06,
+        duration: 0.8,
+        ease: "elastic.out",
+        opacity: 1,
+        y: 0,
+        clearProps: "all",
+    });
+
+    equivalenceDiagramBody.classList.remove("hide");
 }
 
 // Sample 1
