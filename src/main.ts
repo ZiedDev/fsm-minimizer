@@ -27,7 +27,6 @@ const minimizedTableComment = document.querySelector<HTMLDivElement>("#minimized
 const equivalenceDiagramBody = document.querySelector<HTMLDivElement>("#equivalence-diagram")!;
 const equivalenceSvg = document.querySelector<SVGSVGElement>("#equivalence-svg")!;
 const equivalenceLegend = document.querySelector<HTMLDivElement>("#equivalence-legend")!;
-const equivalenceDiagramNextButtonBody = document.querySelector<HTMLDivElement>(".equivalence-diagram-next-button")!;
 const equivalenceDiagramNextButton = document.querySelector<HTMLDivElement>(".equivalence-diagram-next-button button")!;
 
 // Types
@@ -104,7 +103,7 @@ downloadButton.addEventListener("click", () => {
 fileElement.addEventListener("input", e => {
     loadJSON(e);
 });
-nextButton.addEventListener("click", e => {
+nextButton.addEventListener("click", () => {
     let isFinished = !continueImplicationTable();
 
     if (isFinished) {
@@ -119,7 +118,7 @@ nextButton.addEventListener("click", e => {
         });
     }
 });
-equivalenceDiagramNextButton.addEventListener("click", e => {
+equivalenceDiagramNextButton.addEventListener("click", () => {
     const reducedTable = reduceImplicationTable();
 
     minimizedTable.innerHTML = "";
