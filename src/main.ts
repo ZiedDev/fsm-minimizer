@@ -94,6 +94,7 @@ generateButton.addEventListener("click", () => {
         });
     }, 0);
     nextButton.disabled = false
+    equivalenceDiagramNextButton.disabled = false
     minimizedTable.innerHTML = "";
     minimizedTableBody.classList.add("hide");
 });
