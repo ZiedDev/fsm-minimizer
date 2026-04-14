@@ -1,5 +1,5 @@
 {
-  "name": "digital-logic-2",
+  "name": "fsm-minimizer",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,10 +10,13 @@
     "deploy": "git subtree push --prefix dist origin gh-pages"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.10.1",
+    "npm": "^11.12.1",
     "typescript": "~6.0.2",
     "vite": "^8.0.4"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.10.1",
     "gsap": "^3.14.2"
   }
 }
