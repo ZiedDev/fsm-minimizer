@@ -390,14 +390,27 @@ function enableDisableGenerateButton(tableData: TableData, { forceDisable }: { f
     if (tableData.nextState.length == 0 || hasEmptyString(tableData)) {
         generateButton.disabled = true;
         generateButton.style.setProperty("--tip-msg", "'You must fill all the inputs'");
-    } else if (hasDuplicateStringsInArray(tableData.presentState)) {
+        return;
+    }
+
+    if (hasDuplicateStringsInArray(tableData.presentState)) {
         generateButton.disabled = true;
         generateButton.style.setProperty("--tip-msg", "'Present states variables can not be repeated'");
-    } else {
-
-        generateButton.disabled = false;
-        generateButton.style.setProperty("--tip-msg", "");
+        return;
     }
+
+    for (let i = 0; i < tableData.nextState.length; i++) {
+        for (let j = 0; j < tableData.nextState[i].length; j++) {
+            if (!tableData.presentState.includes(tableData.nextState[i][j])) {
+                generateButton.disabled = true;
+                generateButton.style.setProperty("--tip-msg", "'A next state element does not exist in the present state variables'");
+                return;
+            }
+        }
+    }
+
+    generateButton.disabled = false;
+    generateButton.style.setProperty("--tip-msg", "");
 }
 function generateImplicationTable(tableData: TableData): HTMLDivElement {
     const table = document.createElement("div");
@@ -423,32 +436,54 @@ function generateImplicationTable(tableData: TableData): HTMLDivElement {
 
             if (JSON.stringify(tableData.output[i]) == JSON.stringify(tableData.output[j])) {
                 let equivalence = 0;
+
+                let foundCorrect = true;
+                const element = document.createElement("p");
                 for (let z = 0; z < tableData.nextState[j].length; z++) {
+                    // Checks if two lines are equivalent
                     if (tableData.nextState[i][z] == tableData.nextState[j][z]) {
                         equivalence++;
 
                         if (equivalence == tableData.nextState[i].length) {
-                            const element = document.createElement("p");
                             rowElement.innerHTML = "";
                             element.classList.add("correct");
                             element.textContent = "✓";
                             rowElement.dataset.val = "✓";
                             rowElement.append(element);
+
+
                             break;
                         } else continue;
                     }
 
-                    const element = document.createElement("p");
-                    element.textContent = `${[tableData.nextState[j][z], tableData.nextState[i][z]].sort()[0]}-${[tableData.nextState[j][z], tableData.nextState[i][z]].sort()[1]}\n`;
-                    rowElement.dataset.val = JSON.stringify([...JSON.parse(rowElement.dataset.val), [tableData.nextState[j][z], tableData.nextState[i][z]].sort()].sort());
-                    if (rowElement.dataset.coords == rowElement.dataset.val.substring(1, rowElement.dataset.val.length - 1)) {
-                        rowElement.innerHTML = "";
-                        element.classList.add("correct");
-                        element.textContent = "✓";
-                        rowElement.dataset.val = "✓";
-                        rowElement.append(element);
-                        break;
+
+                    let coords: string[] = JSON.parse(rowElement.dataset.coords);
+                    let val: string[][] = JSON.parse(rowElement.dataset.val);
+                    let newVal: string[] = [tableData.nextState[j][z], tableData.nextState[i][z]].sort();
+
+                    val.push(newVal);
+
+                    let flag = val.some(subArr =>
+                        subArr.length === coords.length &&
+                        subArr.every((val, i) => val === coords[i])
+                    );
+
+                    if (!flag) {
+                        rowElement.dataset.val = JSON.stringify([...JSON.parse(rowElement.dataset.val), [tableData.nextState[j][z], tableData.nextState[i][z]].sort()].sort()); 
                     }
+                    element.textContent = `${[tableData.nextState[j][z], tableData.nextState[i][z]].sort()[0]}-${[tableData.nextState[j][z], tableData.nextState[i][z]].sort()[1]}\n`;
+
+                    foundCorrect = foundCorrect && flag;
+
+                    rowElement.append(element);
+                }
+
+                if (foundCorrect) {
+                    rowElement.innerHTML = "";
+                    element.classList.add("correct");
+                    element.textContent = "✓";
+                    rowElement.dataset.val = "✓";
+                    // console.log(rowElement.dataset.coords);
                     rowElement.append(element);
                 }
             } else {
@@ -503,28 +538,26 @@ function continueImplicationTable() {
             const elementValArr = JSON.parse(elementVal);
 
             let foundWrong = false;
-            let foundCorrect = false;
+            let foundCorrect = true;
+
             elementValArr.forEach((element: string[]) => {
                 let auxElement = tableContent.querySelector<HTMLElement>(`[data-coords='${JSON.stringify(element.sort())}']`);
 
-                const auxElementVal = auxElement!.getAttribute("data-val")!;
-                if (auxElementVal != "x" && auxElementVal != "✓") return;
-
                 foundWrong = auxElement?.dataset.val == "x";
-                foundCorrect = auxElement?.dataset.val == "✓";
+                foundCorrect = foundCorrect && (auxElement?.dataset.val == "✓");
             });
 
-            if (foundCorrect) {
-                const correctElement = document.createElement("p");
-                correctElement.textContent = "✓";
-                correctElement.classList.add("correct-next-element");
-                stage.push([child, correctElement]);
-                change = true;
-            } else if (foundWrong) {
+            if (foundWrong) {
                 const wrongElement = document.createElement("p");
                 wrongElement.textContent = "x";
                 wrongElement.classList.add("wrong-next-element");
                 stage.push([child, wrongElement]);
+                change = true;
+            } else if (foundCorrect && !foundWrong) {
+                const correctElement = document.createElement("p");
+                correctElement.textContent = "✓";
+                correctElement.classList.add("correct-next-element");
+                stage.push([child, correctElement]);
                 change = true;
             }
 
@@ -770,27 +803,23 @@ function generateEquivalenceDiagram(equivalenceClasses: string[][]): void {
     const radius = 220;
     const nodeRadius = 25;
 
-    // Clear previous diagram
     svg.innerHTML = '';
     equivalenceLegend.innerHTML = '';
 
-    // Get all unique states
     const allStates = equivalenceClasses.flat();
     const stateCount = allStates.length;
 
-    // Color palette for equivalence classes (matches your reference image)
     const colors = [
-        '#ef4444', // red
-        '#22c55e', // green  
-        '#3b82f6', // blue
-        '#f59e0b', // orange
-        '#a855f7', // purple
-        '#ec4899', // pink
-        '#14b8a6', // teal
-        '#f97316', // orange-red
+        '#ef4444',
+        '#22c55e',
+        '#3b82f6',
+        '#f59e0b',
+        '#a855f7',
+        '#ec4899',
+        '#14b8a6',
+        '#f97316',
     ];
 
-    // Calculate positions for each state on the circle
     const statePositions: { [key: string]: { x: number; y: number; color: string } } = {};
 
     allStates.forEach((state, i) => {
@@ -798,14 +827,12 @@ function generateEquivalenceDiagram(equivalenceClasses: string[][]): void {
         const x = centerX + radius * Math.cos(angle);
         const y = centerY + radius * Math.sin(angle);
 
-        // Find which equivalence class this state belongs to
         const classIndex = equivalenceClasses.findIndex(eq => eq.includes(state));
         const color = colors[classIndex % colors.length];
 
         statePositions[state] = { x, y, color };
     });
 
-    // Draw the outer circle
     const outerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     outerCircle.setAttribute('cx', String(centerX));
     outerCircle.setAttribute('cy', String(centerY));
@@ -816,11 +843,9 @@ function generateEquivalenceDiagram(equivalenceClasses: string[][]): void {
     outerCircle.setAttribute('opacity', '0.3');
     svg.appendChild(outerCircle);
 
-    // Draw connections between equivalent states
     equivalenceClasses.forEach((eqClass, classIndex) => {
         const color = colors[classIndex % colors.length];
 
-        // Draw lines connecting all pairs in this equivalence class
         for (let i = 0; i < eqClass.length; i++) {
             for (let j = i + 1; j < eqClass.length; j++) {
                 const state1 = eqClass[i];
@@ -842,11 +867,9 @@ function generateEquivalenceDiagram(equivalenceClasses: string[][]): void {
         }
     });
 
-    // Draw state nodes
     allStates.forEach((state) => {
         const pos = statePositions[state];
 
-        // Node circle
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('cx', String(pos.x));
         circle.setAttribute('cy', String(pos.y));
@@ -857,7 +880,7 @@ function generateEquivalenceDiagram(equivalenceClasses: string[][]): void {
         circle.classList.add('state-node');
         svg.appendChild(circle);
 
-        // State label
+        // Label
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttribute('x', String(pos.x));
         text.setAttribute('y', String(pos.y));
@@ -870,7 +893,6 @@ function generateEquivalenceDiagram(equivalenceClasses: string[][]): void {
         svg.appendChild(text);
     });
 
-    // Create legend
     equivalenceClasses.forEach((eqClass, classIndex) => {
         const color = colors[classIndex % colors.length];
 
@@ -889,8 +911,7 @@ function generateEquivalenceDiagram(equivalenceClasses: string[][]): void {
         equivalenceLegend.appendChild(legendItem);
     });
 
-    // Animate diagram appearance
-    gsap.fromTo([svg.querySelectorAll('.equivalence-line'), svg.querySelectorAll('.state-node'), svg.querySelectorAll('text'), equivalenceLegend.children], {
+    gsap.fromTo([svg.querySelectorAll('.state-node'), svg.querySelectorAll('text'), , equivalenceLegend.children], {
         opacity: 0,
         y: 15
     }, {

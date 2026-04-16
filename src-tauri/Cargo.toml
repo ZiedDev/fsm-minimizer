@@ -1,10 +1,10 @@
 [package]
-name = "app"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+name = "fsm-minimizer"
+version = "0.1.1"
+description = "FSM Minimizer is an interactive application for minimizing finite state machines (FSM) using implication tables. It supports both Moore and Mealy machine types and provides a visual, step-by-step reduction process."
+authors = ["ZiedDev"]
 license = ""
-repository = ""
+repository = "https://github.com/ZiedDev/fsm-minimizer/"
 edition = "2021"
 rust-version = "1.77.2"
 
@@ -23,3 +23,13 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.10.3", features = [] }
 tauri-plugin-log = "2"
+
+[profile.dev]
+incremental = true # Compile your binary in smaller steps.
+
+[profile.release]
+codegen-units = 1 # Allows LLVM to perform better optimization.
+lto = true # Enables link-time-optimizations.
+opt-level = "s" # Prioritizes small binary size. Use `3` if you prefer speed.
+panic = "abort" # Higher performance by disabling panic handlers.
+strip = true # Ensures debug symbols are removed.
