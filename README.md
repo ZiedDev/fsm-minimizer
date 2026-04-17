@@ -2,7 +2,7 @@
 
 > Minimize complex finite state machines using implication tables
 
-FSM Minimizer is an interactive web tool for minimizing finite state machines (FSM) using implication tables. It supports both **Moore** and **Mealy** machine types and provides a visual, step-by-step reduction process.
+FSM Minimizer is an interactive application for minimizing finite state machines (FSM) using implication tables. It supports both **Moore** and **Mealy** machine types and provides a visual, step-by-step reduction process. Available as both a **web app** and a **native desktop app** powered by Tauri.
 
 ![FSM Minimizer Demo](./public/showcase.gif)
 
@@ -15,8 +15,20 @@ FSM Minimizer is an interactive web tool for minimizing finite state machines (F
 - 🎨 **Smooth Animations**: Beautiful GSAP-powered transitions and interactions
 - ⚡ **Dynamic Input Configuration**: Support for multiple inputs (X₀, X₁, X₂, ...)
 - ✅ **Real-time Validation**: Instant feedback on duplicate states and incomplete data
+- 🖥️ **Desktop App**: Native cross-platform app via Tauri with persistent window state
 
-## 🚀 Cloning the Project
+## 🛠️ Tech Stack
+
+- **TypeScript** (~6.0.2) - Type-safe development
+- **Vite** (^8.0.4) - Fast build tool and dev server
+- **GSAP** (^3.14.2) - Professional-grade animations with SplitText plugin
+- **Tauri** (^2.10.3) - Native desktop app framework (Rust-based)
+- **CSS Grid** - Responsive table layouts
+- **HTML5** - Modern semantic markup
+- **Mona Sans** - Custom font for UI
+
+
+## 🌐 Web App
 
 ### Prerequisites
 
@@ -33,46 +45,109 @@ git clone https://github.com/ZiedDev/fsm-minimizer/
 cd fsm-minimizer
 
 # Install dependencies
+bun install
+# or
 npm install
 # or
 yarn install
-# or
-bun install
 
 # Start development server
+bun dev
+# or
 npm run dev
 # or
 yarn dev
-# or
-bun dev
 ```
 
 ### Build for Production
 
 ```bash
 # Build the project
+bun run build
+# or
 npm run build
 # or
 yarn build
-# or
-bun run build
 
 # Preview production build
+bun preview
+# or
 npm run preview
 # or
 yarn preview
-# or
-bun preview
 ```
 
 ### Deploy to GitHub Pages
 
 ```bash
+bun run deploy
+# or
 npm run deploy
 # or
 yarn deploy
+```
+
+## 🖥️ Desktop App (Tauri)
+
+FSM Minimizer can be run as a native desktop application on **Windows** using [Tauri](https://tauri.app/). 
+> (If you wish to use the app on **MacOS** or **Linux** you will have to build the app yourself)
+
+### Prerequisites
+
+In addition to the web app prerequisites, you'll need:
+
+- **Rust** (1.77.2 or newer) — [Install via rustup](https://rustup.rs/)
+- **Tauri CLI** — installed automatically as a dev dependency via npm/bun
+- Platform-specific system dependencies — see the [Tauri prerequisites guide](https://tauri.app/start/prerequisites/)
+
+### Development
+
+```bash
+# Install dependencies (if not already done)
+bun install
+
+# Start the Tauri dev window
+bun run tauri dev
 # or
-bun run deploy
+npm run tauri dev
+# or
+yarn run tauri dev
+```
+
+This launches a native window with hot-reload connected to the Vite dev server at `http://localhost:5173`.
+
+### Build for Production
+
+```bash
+bun run tauri build
+# or
+npm run tauri build
+# or
+yarn run tauri build
+```
+
+The compiled installer/binary will be output to `src-tauri/target/release/bundle/`. Tauri builds native packages for your current platform (`.msi`/`.exe` on Windows, `.dmg`/`.app` on macOS, `.deb`/`.AppImage` on Linux).
+
+### Desktop Features
+
+- **Persistent window state** — window size and position are remembered across sessions via `tauri-plugin-window-state`
+- **Resizable window** — minimum size of 400×300, default 800×600
+
+### Desktop Project Structure
+
+```
+src-tauri/
+├── src/
+│   ├── main.rs              # Tauri entry point
+│   └── lib.rs               # App setup (plugins, window state)
+├── capabilities/
+│   ├── default.json         # Default permission set
+│   └── desktop.json         # Desktop-specific capability (macOS/Windows/Linux)
+├── icons/                   # App icons for all platforms
+├── Cargo.toml               # Rust dependencies
+├── Cargo.lock               # Rust lock file
+├── build.rs                 # Tauri build script
+└── tauri.conf.json          # Tauri configuration (app name, window, bundle targets)
 ```
 
 ## 📖 How to Use
@@ -137,15 +212,6 @@ Click **Choose File** to load a previously saved JSON file.
 }
 ```
 
-## 🛠️ Tech Stack
-
-- **TypeScript** (~6.0.2) - Type-safe development
-- **Vite** (^8.0.4) - Fast build tool and dev server
-- **GSAP** (^3.14.2) - Professional-grade animations with SplitText plugin
-- **CSS Grid** - Responsive table layouts
-- **HTML5** - Modern semantic markup
-- **Mona Sans** - Custom font for UI
-
 ## 📁 Project Structure
 
 ```
@@ -153,38 +219,32 @@ fsm-minimizer/
 ├── src/
 │   ├── main.ts              # Core application logic
 │   ├── style.css            # Styling and animations
-│   └── assets/
-│       ├── fonts/
-│       │   └── Mona Sans/   # Custom font files
-│       │       ├── LICENSE
-│       │       ├── Mona-Sans.ttf
-│       │       └── TTF/     # Individual font weights
-│       └── trashIcon.svg    # Delete button icon
+│   └── assets/...           # Additional assets
+├── src-tauri/...            # Tauri files
 ├── public/
-│   └── favicon.svg          # App favicon
-├── dist/                    # Production build (generated)
+│   ├── favicon.svg          # App favicon
+│   └── showcase.gif         # README.md preview GIF
+├── dist/...                 # Production build (generated)
 ├── index.html               # Main HTML file
-├── package.json             # Dependencies and scripts
-├── tsconfig.json            # TypeScript configuration
-├── bun.lock                 # Lock file
-├── .gitignore              # Git ignore rules
-└── README.md               # This file
+├── vite.config.ts           # Vite + Tauri dev server config
+└── package.json             # Dependencies and scripts
 ```
 
-## 🎯 Algorithm Overview
+## 🎨 Features
 
-FSM Minimizer uses the **implication table method** for FSM minimization:
+### Validation
+- Real-time input validation
+- Duplicate state detection
+- Empty field detection
+- Non existing Present state used in Next state
+- Visual feedback with tooltips on disabled buttons
 
-1. **Build Implication Table**: Create a triangular matrix comparing all state pairs
-2. **Mark Incompatible Pairs**: States with different outputs are incompatible (marked with <span style="color:red">**×**</span>)
-3. **Check Implications**: For each pair, check if their next states are compatible
-   - If states transition to incompatible pairs, mark them as incompatible
-   - If states transition to the same states, mark them as compatible (<span style="color:green">**✓**</span>)
-4. **Iterate**: Click "Next" to repeat until no new incompatibilities are found
-5. **Group Compatible States**: Merge all compatible state pairs into equivalence classes
-6. **Generate Minimized FSM**: Create new transition table using merged states with new labels (A, B, C...)
-
-## 🎨 Features in Detail
+### User Experience
+- Responsive design
+- Interactive row deletion with animation
+- Auto-scrolling to relevant content
+- Dynamic table headers based on input count
+- Navigating with keyboard keys
 
 ### Animations
 - GSAP-powered smooth transitions for all UI interactions
@@ -192,32 +252,15 @@ FSM Minimizer uses the **implication table method** for FSM minimization:
 - Elastic easing for natural, playful motion
 - Smooth scrolling to new content sections
 
-### Validation
-- Real-time input validation
-- Duplicate state detection
-- Empty field detection
-- Visual feedback with tooltips on disabled buttons
-
-### User Experience
-- Responsive design with CSS Grid
-- Mona Sans typography
-- Interactive row deletion with animation
-- Auto-scrolling to relevant content
-- Dynamic table headers based on input count
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ## 🙏 Acknowledgments
 
-- Implication table algorithm from digital logic design theory
+- **Tauri** for the native cross-platform desktop app framework
 - **GSAP** for smooth, professional animations
 - **Vite** for blazing-fast development experience
 - **Mona Sans** font by GitHub
