@@ -1,6 +1,6 @@
 [package]
 name = "fsm-minimizer"
-version = "0.1.1"
+version = "0.1.2"
 description = "FSM Minimizer is an interactive application for minimizing finite state machines (FSM) using implication tables. It supports both Moore and Mealy machine types and provides a visual, step-by-step reduction process."
 authors = ["ZiedDev"]
 license = ""
@@ -30,6 +30,9 @@ incremental = true # Compile your binary in smaller steps.
 [profile.release]
 codegen-units = 1 # Allows LLVM to perform better optimization.
 lto = true # Enables link-time-optimizations.
-opt-level = "s" # Prioritizes small binary size. Use `3` if you prefer speed.
+opt-level = "z" # Prioritizes small binary size. Use `3` if you prefer speed.
 panic = "abort" # Higher performance by disabling panic handlers.
 strip = true # Ensures debug symbols are removed.
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-window-state = "2"

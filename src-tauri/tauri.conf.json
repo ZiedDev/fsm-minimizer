@@ -1,7 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "fsm-minimizer",
-  "version": "0.1.1",
+  "mainBinaryName": "fsm-minimizer",
+  "version": "0.1.2",
   "identifier": "com.zieddev.fsmminimizer",
   "build": {
     "frontendDist": "../dist",
@@ -14,7 +15,8 @@
     "windows": [
       {
         "title": "FSM Minimizer",
-
+        "width": 800,
+        "height": 600,
         "minWidth": 400,
         "minHeight": 300,
         "resizable": true,
@@ -34,6 +36,11 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
+      }
+    }
   }
 }

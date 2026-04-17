@@ -6,11 +6,96 @@
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>fsm-minimizer</title>
+  
+  <!-- loader styles -->
+  <style>
+    .splash {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: black;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .splash-image {
+      width: 12rem;
+      height: 12rem;
+    }
+
+    .loading-svg {
+      position: absolute;
+      top: 60%;
+      width: 20rem;
+      height: 10rem;
+    }
+
+    @keyframes splash {
+      0% {
+        transform: scale(1);
+      }
+
+      100% {
+        transform: scale(1.2);
+      }
+    }
+
+    @keyframes fade-out {
+      0% {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      100% {
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
+  </style>
   <script type="module" crossorigin src="./assets/index-BUL5IP5H.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-BP1W8SEO.css">
 </head>
 
 <body>
+  <div class="splash">
+    <img class="splash-image" src="./assets/logo-ClD11NKm.png" alt="">
+    <svg class="loading-svg" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+      <circle cx="18" cy="12" r="0" fill="#ffffff">
+        <animate attributeName="r" begin=".67" calcMode="spline" dur="1.5s"
+          keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0" />
+      </circle>
+      <circle cx="12" cy="12" r="0" fill="#ffffff">
+        <animate attributeName="r" begin=".33" calcMode="spline" dur="1.5s"
+          keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0" />
+      </circle>
+      <circle cx="6" cy="12" r="0" fill="#ffffff">
+        <animate attributeName="r" begin="0" calcMode="spline" dur="1.5s"
+          keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0" />
+      </circle>
+    </svg>
+  </div>
+  <script>
+    const splash = document.querySelector('.splash')
+    const splashImage = document.querySelector('.splash-image')
+    const loadingSvg = document.querySelector('.loading-svg')
+    window.addEventListener('load', () => {
+      let timeoutSplash = setTimeout(() => {
+        loadingSvg.parentElement.removeChild(loadingSvg)
+        splashImage.style.animation = 'splash 1000ms ease forwards'
+        splash.style.animation = 'fade-out 1000ms ease forwards'
+        let timeout = setTimeout(() => {
+          splash.parentElement.removeChild(splash)
+          clearTimeout(timeout)
+        }, 1000);
+      }, 1500);
+    })
+  </script>
+
   <div id="app">
     <div class="transition-table" id="transition-table">
       <div class="header">
