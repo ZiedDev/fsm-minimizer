@@ -52,6 +52,70 @@ let transitionTableData: TableData = {
 let currentMode: "mealy" | "moore";
 let currentInputNum: number;
 
+// Arrow Keys
+window.addEventListener("keydown", e => {
+    if (e.key != "ArrowDown" && e.key != "ArrowUp" && e.key != "ArrowLeft" && e.key != "ArrowRight" && e.key != "Enter" && e.key != "Delete") return;
+
+    const currentActiveInput = document.activeElement as HTMLInputElement | null;
+    if (currentActiveInput == null) return;
+
+    let checkInputInTable = currentActiveInput?.classList.contains("transition-input")
+    const tableInputs = [...transitionTable.querySelectorAll<HTMLInputElement>("input")]
+    let elementToFocus: HTMLInputElement;
+
+    if (e.key == "Delete") {
+        currentActiveInput.parentElement?.parentElement?.querySelector("button")?.click()
+        return;
+    }
+
+    if (!checkInputInTable) {
+        elementToFocus = tableInputs[0]
+    } else if (e.key == "ArrowLeft") {
+        elementToFocus = tableInputs[Math.max(0, tableInputs.indexOf(currentActiveInput) - 1)];
+    } else if (e.key == "ArrowRight" || e.key == "Enter") {
+        elementToFocus = tableInputs[Math.min(tableInputs.length - 1, tableInputs.indexOf(currentActiveInput) + 1)];
+
+        if (currentActiveInput == elementToFocus) {
+            const newRow = addARow();
+            transitionTable.appendChild(newRow);
+            tableInputs.push(...newRow.querySelectorAll<HTMLInputElement>("input"));
+            elementToFocus = tableInputs[Math.min(tableInputs.length - 1, tableInputs.indexOf(currentActiveInput) + 1)];
+        }
+    } else if (e.key == "ArrowUp") {
+        let x = 1 + transitionTableData.nextState[0].length + transitionTableData.output[0].length;
+        elementToFocus = tableInputs[Math.max(0, tableInputs.indexOf(currentActiveInput) - x)]
+
+    } else if (e.key == "ArrowDown") {
+        let x = 1 + transitionTableData.nextState[0].length + transitionTableData.output[0].length;
+        elementToFocus = tableInputs[Math.min(tableInputs.length - 1, tableInputs.indexOf(currentActiveInput) + x)]
+
+        if (currentActiveInput == elementToFocus) {
+            const newRow = addARow();
+            transitionTable.appendChild(newRow);
+            tableInputs.push(...newRow.querySelectorAll<HTMLInputElement>("input"));
+            elementToFocus = tableInputs[Math.min(tableInputs.length - 1, tableInputs.indexOf(currentActiveInput) + x)]
+        }
+    }
+
+    setTimeout(() => {
+        if (e.key == "Enter" && elementToFocus == null) {
+            const newRow = addARow();
+            transitionTable.appendChild(newRow);
+            tableInputs.push(...newRow.querySelectorAll<HTMLInputElement>("input"));
+            elementToFocus = tableInputs[Math.min(tableInputs.length - 1, tableInputs.indexOf(currentActiveInput) + 1)];
+        }
+
+        if (elementToFocus == null) return;
+
+        elementToFocus.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "nearest"
+        });
+        elementToFocus.focus({ preventScroll: true });
+    }, 0);
+});
+
 // Events
 isMooreCheck.addEventListener("click", () => {
     transitionTable.innerHTML = "";
@@ -173,6 +237,7 @@ function addARow(
 
     presentState.classList.add("present-state");
     presentStateInput.classList.add("present-state-input");
+    presentStateInput.classList.add("transition-input");
     presentStateInput.value = presentStateVal ?? "";
     presentState.append(presentStateInput);
 
@@ -185,6 +250,8 @@ function addARow(
 
         nextStateZeroInput.classList.add("next-input");
         nextStateOneInput.classList.add("next-input");
+        nextStateZeroInput.classList.add("transition-input");
+        nextStateOneInput.classList.add("transition-input");
         nextStateZeroInput.value = nextStateVal?.[i * 2] ?? "";
         nextStateOneInput.value = nextStateVal?.[i * 2 + 1] ?? "";
 
@@ -202,6 +269,7 @@ function addARow(
         const outputInput = document.createElement("input");
 
         outputInput.classList.add("output-input");
+        outputInput.classList.add("transition-input");
         outputInput.value = outputVal?.[0] ?? "";
 
         output.append(outputInput);
@@ -216,6 +284,8 @@ function addARow(
 
             outputZeroInput.classList.add("output-input");
             outputOneInput.classList.add("output-input");
+            outputZeroInput.classList.add("transition-input");
+            outputOneInput.classList.add("transition-input");
             outputZeroInput.value = outputVal?.[i * 2] ?? "";
             outputOneInput.value = outputVal?.[i * 2 + 1] ?? "";
 
@@ -266,6 +336,7 @@ function addARow(
 
     row.append(deleteButton, presentState, nextState, output);
     row.querySelectorAll<HTMLInputElement>("input").forEach(input => {
+        input.onfocus = () => input.select();
         input.addEventListener("input", () => {
             transitionTableData = readTable();
             enableDisableGenerateButton(transitionTableData);
@@ -469,7 +540,7 @@ function generateImplicationTable(tableData: TableData): HTMLDivElement {
                     );
 
                     if (!flag) {
-                        rowElement.dataset.val = JSON.stringify([...JSON.parse(rowElement.dataset.val), [tableData.nextState[j][z], tableData.nextState[i][z]].sort()].sort()); 
+                        rowElement.dataset.val = JSON.stringify([...JSON.parse(rowElement.dataset.val), [tableData.nextState[j][z], tableData.nextState[i][z]].sort()].sort());
                     }
                     element.textContent = `${[tableData.nextState[j][z], tableData.nextState[i][z]].sort()[0]}-${[tableData.nextState[j][z], tableData.nextState[i][z]].sort()[1]}\n`;
 
