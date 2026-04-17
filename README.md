@@ -230,7 +230,7 @@ fsm-minimizer/
 └── package.json             # Dependencies and scripts
 ```
 
-## 🎨 Features
+## 🎨 Extras
 
 ### Validation
 - Real-time input validation
@@ -251,7 +251,6 @@ fsm-minimizer/
 - SplitText animations for character-by-character text reveals
 - Elastic easing for natural, playful motion
 - Smooth scrolling to new content sections
-
 
 ## 🤝 Contributing
 
