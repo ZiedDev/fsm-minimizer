@@ -7,6 +7,17 @@
   ],
   "permissions": [
     "core:default",
-    "window-state:default"
+    "window-state:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://www.github.com/ZiedDev/"
+        },
+        {
+          "url": "https://github.com/ZiedDev/fsm-minimizer/"
+        }
+      ]
+    }
   ]
 }
