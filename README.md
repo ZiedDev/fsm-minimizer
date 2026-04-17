@@ -52,11 +52,11 @@ npm install
 yarn install
 
 # Start development server
-bun dev
+bun run dev
 # or
 npm run dev
 # or
-yarn dev
+yarn run dev
 ```
 
 ### Build for Production
@@ -67,14 +67,14 @@ bun run build
 # or
 npm run build
 # or
-yarn build
+yarn run build
 
 # Preview production build
-bun preview
+bun run preview
 # or
 npm run preview
 # or
-yarn preview
+yarn run preview
 ```
 
 ### Deploy to GitHub Pages
