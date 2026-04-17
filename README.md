@@ -84,7 +84,7 @@ bun run deploy
 # or
 npm run deploy
 # or
-yarn deploy
+yarn run deploy
 ```
 
 ## 🖥️ Desktop App (Tauri)
