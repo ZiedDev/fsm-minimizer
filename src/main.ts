@@ -2,6 +2,8 @@ import './style.css';
 import trashIcon from './assets/trashIcon.svg'
 import { gsap } from "gsap";
 import { SplitText } from 'gsap/SplitText';
+
+import { isTauri } from "@tauri-apps/api/core";
 gsap.config({ nullTargetWarn: false });
 gsap.registerPlugin(SplitText)
 
@@ -389,13 +391,32 @@ function readTable(): TableData {
 
     return transitionTableExtractedData;
 }
-function downloadJSON(tableData: TableData) {
-    let blob = new Blob([JSON.stringify(tableData)], { type: "application/json" });
-    const a = document.createElement("a");
+async function downloadJSON(tableData: TableData) {
     const todayDate = new Date().toISOString().slice(0, 10);
-    a.download = `My Table ${todayDate}.json`;
-    a.href = window.URL.createObjectURL(blob);
-    a.click(); // Trigger download
+
+    if (isTauri()) {
+        const { writeTextFile } = await import("@tauri-apps/plugin-fs");
+        const { save } = await import("@tauri-apps/plugin-dialog");
+
+        const filePath = await save({
+            defaultPath: `My Table ${todayDate}.json`,
+            filters: [
+                {
+                    name: "JSON",
+                    extensions: ["json"]
+                }
+            ]
+        });
+
+        if (!filePath) return;
+        await writeTextFile(filePath, JSON.stringify(tableData, null, 2));
+    } else {
+        const blob = new Blob([JSON.stringify(tableData)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.download = `My Table ${todayDate}.json`;
+        a.href = URL.createObjectURL(blob);
+        a.click();
+    }
 }
 async function loadJSON(event: any) {
     const file = event.target.files.item(0);
@@ -509,8 +530,9 @@ function generateImplicationTable(tableData: TableData): HTMLDivElement {
                 let equivalence = 0;
 
                 let foundCorrect = true;
-                const element = document.createElement("p");
+                const elements: HTMLParagraphElement[] = [];
                 for (let z = 0; z < tableData.nextState[j].length; z++) {
+                    const element = document.createElement("p");
                     // Checks if two lines are equivalent
                     if (tableData.nextState[i][z] == tableData.nextState[j][z]) {
                         equivalence++;
@@ -520,13 +542,12 @@ function generateImplicationTable(tableData: TableData): HTMLDivElement {
                             element.classList.add("correct");
                             element.textContent = "✓";
                             rowElement.dataset.val = "✓";
+
                             rowElement.append(element);
-
-
+                            elements.push(element);
                             break;
                         } else continue;
                     }
-
 
                     let coords: string[] = JSON.parse(rowElement.dataset.coords);
                     let val: string[][] = JSON.parse(rowElement.dataset.val);
@@ -549,14 +570,15 @@ function generateImplicationTable(tableData: TableData): HTMLDivElement {
                     rowElement.append(element);
                 }
 
-                if (foundCorrect) {
-                    rowElement.innerHTML = "";
-                    element.classList.add("correct");
-                    element.textContent = "✓";
-                    rowElement.dataset.val = "✓";
-                    // console.log(rowElement.dataset.coords);
-                    rowElement.append(element);
-                }
+                elements.forEach(element => {
+                    if (foundCorrect) {
+                        rowElement.innerHTML = "";
+                        element.classList.add("correct");
+                        element.textContent = "✓";
+                        rowElement.dataset.val = "✓";
+                        rowElement.append(element);
+                    }
+                })
             } else {
                 const element = document.createElement("p");
                 element.classList.add("wrong");
@@ -599,45 +621,47 @@ function generateImplicationTable(tableData: TableData): HTMLDivElement {
 }
 function continueImplicationTable() {
     const tableContent = implicationTable.children[0];
-    const stage: HTMLElement[][] = [];
+    const animationStage: HTMLElement[][] = [];
     let change = false;
     tableContent.querySelectorAll<HTMLElement>(".implication-row").forEach(row => {
-        Array.from(row.children as HTMLCollectionOf<HTMLElement>).forEach(child => {
-            const elementVal = child.getAttribute("data-val")!;
-            if (elementVal == "x" || elementVal == "✓") return;
+        Array.from(row.children as HTMLCollectionOf<HTMLElement>).forEach(cell => {
+            const cellVal = cell.getAttribute("data-val")!;
+            if (cellVal == "x" || cellVal == "✓") return;
 
-            const elementValArr = JSON.parse(elementVal);
+            const cellValArray = JSON.parse(cellVal);
 
             let foundWrong = false;
             let foundCorrect = true;
 
-            elementValArr.forEach((element: string[]) => {
+            cellValArray.forEach((element: string[]) => {
                 let auxElement = tableContent.querySelector<HTMLElement>(`[data-coords='${JSON.stringify(element.sort())}']`);
 
                 foundWrong = auxElement?.dataset.val == "x";
                 foundCorrect = foundCorrect && (auxElement?.dataset.val == "✓");
+
+
+                console.log(element, [foundWrong, foundCorrect]);
+
+                if (foundWrong) {
+                    const wrongElement = document.createElement("p");
+                    wrongElement.textContent = "x";
+                    wrongElement.classList.add("wrong-next-element");
+                    cell.dataset.val = wrongElement.textContent;
+                    cell.append(wrongElement);
+                    change = true;
+                    animationStage.push([cell, wrongElement]);
+                } else if (foundCorrect && !foundWrong) {
+                    const correctElement = document.createElement("p");
+                    correctElement.textContent = "✓";
+                    correctElement.classList.add("correct-next-element");
+                    cell.dataset.val = correctElement.textContent;
+                    cell.append(correctElement);
+                    animationStage.push([cell, correctElement]);
+                    change = true;
+                }
             });
 
-            if (foundWrong) {
-                const wrongElement = document.createElement("p");
-                wrongElement.textContent = "x";
-                wrongElement.classList.add("wrong-next-element");
-                stage.push([child, wrongElement]);
-                change = true;
-            } else if (foundCorrect && !foundWrong) {
-                const correctElement = document.createElement("p");
-                correctElement.textContent = "✓";
-                correctElement.classList.add("correct-next-element");
-                stage.push([child, correctElement]);
-                change = true;
-            }
-
-            stage.forEach(element => {
-                element[0].dataset.val = element[1].textContent;
-                element[0].append(element[1]);
-            });
-
-            gsap.fromTo(stage.map(pair => pair[1]), {
+            gsap.fromTo(animationStage.map(pair => pair[1]), {
                 opacity: 0,
                 y: 15,
             }, {
@@ -951,7 +975,6 @@ function generateEquivalenceDiagram(equivalenceClasses: string[][]): void {
         circle.classList.add('state-node');
         svg.appendChild(circle);
 
-        // Label
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttribute('x', String(pos.x));
         text.setAttribute('y', String(pos.y));
